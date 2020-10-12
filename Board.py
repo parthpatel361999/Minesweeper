@@ -1,5 +1,4 @@
 import random as rnd
-
 import numpy as np
 
 
@@ -46,7 +45,8 @@ def findNeighboringCoords(coords, dim):
         neighbors.append(pn)
     return neighbors
 
-
+'''
 b = Board(10)
 b.set_mines(8)
 print(b.board)
+'''
