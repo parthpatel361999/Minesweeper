@@ -2,7 +2,7 @@ from Agent import Agent,Cell
 from Board import Board
 import random as rnd
 
-def identify_mine(agent, gboard, coords):
+def identify_mine_neighbors(agent, gboard, coords):
     r,c = coords
     if((gboard.board[r][c] - agent.board[r][c].numMineNeighbors) == agent.board[r][c].numHiddenNeighbors):
         for cn in agent.board[r][c].neighbors:
@@ -15,7 +15,7 @@ def identify_safe_neighbors(agent,gboard,coords):
         for cn in agent.board[r][c].neighbors:
             if(agent.board[cn[0]][cn[1]].revealed == False):
                 agent.checkCell(cn,gboard)
-                identify_mine(agent,gboard,(cn[0],cn[1]))
+                identify_mine_neighbors(agent,gboard,(cn[0],cn[1]))
                 identify_safe_neighbors(agent,gboard,(cn[0],cn[1]))
     return
 
@@ -27,7 +27,7 @@ def strategy1(gboard,dim,agent):
             r = rnd.randint(0,dim-1)
             c = rnd.randint(0,dim-1)
         agent.checkCell((r,c),gboard)
-        identify_mine(agent,gboard,(r,c))
+        identify_mine_neighbors(agent,gboard,(r,c))
         identify_safe_neighbors(agent,gboard,(r,c))
         print((r,c))
         display(dim,agent)
