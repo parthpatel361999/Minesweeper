@@ -25,6 +25,9 @@ class Board:
                         self.board[nrow, ncol] += 1
                 count += 1
 
+    def isSolved(self, num_discovered):
+        return num_discovered == self.num_mines
+
 
 def findNeighboringCoords(coords, dim):
     cellRow, cellCol = coords
