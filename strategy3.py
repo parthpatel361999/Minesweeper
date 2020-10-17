@@ -3,6 +3,7 @@ from Board import Board
 from queue import Queue
 import random as rnd
 import numpy as np
+from collections import deque 
 
 # double improved agent
 def strategy3(gboard, dim, agent):
@@ -14,11 +15,16 @@ def strategy3(gboard, dim, agent):
         4. For cell in board, if P(cell = mine) = 0, reveal and add to knowledge base
         5. If no cell was safe, pick minimum probability in the board
     """
+    minesToIdentify = deque()
+    safeToReveal = deque()
+
+    # pick a corner at random to start the game
     corners = [(0,0), (0,gboard.dim-1), (gboard.dim-1,0), (gboard.dim-1, gboard.dim-1)]
     coord = corners[rnd.randint(0,3)]
     firstCell = agent.checkCell(coord, gboard)
     clue = firstCell.type
     
+    # based on revelation from first pick, update KB accordingly
     if not(clue == -1):
         neighbors = firstCell.neighbors
         if clue == 3:
@@ -31,33 +37,47 @@ def strategy3(gboard, dim, agent):
             for n in neighbors:
                 agent.board[n].probability = clue / 3
 
+    # the actual game loop (until all Cells on Agent Board have been explored)
     while not(agent.isFinished()):
 
-        calculateProbability(agent) # this gonna be the bulk of strat3
-        if not(identify_Mines_Safes(agent)):
-            cellToIdentify = findMinCell(agent)
-            agent.identifyMine(cellToIdentify)
-        break        
+        identify_Mines_Safes(agent,minesToIdentify, safeToReveal)
+        if minesToIdentify:
+            cell = minesToIdentify.popleft()
+            agent.identifyMine(cell.coords)
+            continue
+        elif safeToReveal:
+            cell = safeToReveal.popleft()
+            agent.checkCell(cell.coords, gboard)
+            continue
+        else:
+            minCellCoords = findMinCell(agent)
+            agent.checkCell(minCellCoords, gboard)
+        
+        calculateProbability(agent)
 
     return
 
-def calculateProbability(self, agent):
+def calculateProbability(self, agent): # bulk of strategy 3
     return
 
-def identify_Mines_Safes(self, agent):
-    count = 0
+# identify which Cells are safe and/or mines
+def identify_Mines_Safes(self, agent, minesToIdentify, safeToReveal): 
+    #count = 0
     for row in agent.board:
         for c in row:
             if c.probability == 1:
-                agent.board.identifyMine(c.coords)
-                count += 1
+                minesToIdentify.append(c)
+                #agent.board.identifyMine(c.coords)
+                #count += 1
             elif c.probability == 0:
-                agent.revealedCoords.append(c.coords)
-                count += 1
+                safeToReveal.append(c)
+                #agent.revealedCoords.append(c.coords)
+                #count += 1
             # might need to put calculateProbability again here because we want to calculate at each time the agent makes a move
             # calculateProbability(agent)
-    return count == 0
+    #return count == 0
 
+# find the coordinates of Cell on the board with the minimum probability of being mine
 def findMinCell(self, agent):
     min_prob = 2
     final_coords = None
