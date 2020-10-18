@@ -49,8 +49,9 @@ class Agent:
 
 
 class Cell:
-    UNCHECKED = -2
-    MINE = -1
+    UNCHECKED = -3
+    MINE = -2
+    SAFE = -1
 
     def __init__(self, coords, dim):
         self.coords = coords
@@ -61,3 +62,6 @@ class Cell:
         self.numSafeNeighbors = 0
         self.numMineNeighbors = 0
         self.probabilityIsMine = 0
+
+    def isIdentifiedMine(self):
+        return not self.revealed and self.type == Cell.MINE
