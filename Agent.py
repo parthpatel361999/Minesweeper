@@ -45,7 +45,7 @@ class Agent:
         return cell
 
     def isFinished(self):
-        return (self.dim**2 == len(self.revealedCoords) + len(self.identifiedMineCoords) + len(self.trippedMineCoords))
+        return (self.dim**2 == len(self.revealedCoords) + len(self.identifiedMineCoords))
 
 
 class Cell:
@@ -60,4 +60,4 @@ class Cell:
         self.numHiddenNeighbors = len(self.neighbors)
         self.numSafeNeighbors = 0
         self.numMineNeighbors = 0
-        self.probability = 0
+        self.probabilityIsMine = 0
