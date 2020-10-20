@@ -43,16 +43,15 @@ def addEq(KB, equation): #add an equation to the KB
 
 def checkForInference(KB, agent, safeSet):
     madeInference = False
-    m = copy.deepcopy(KB)
-    for eq in m:
+    for eq in KB:
         if (len(eq) - 1 == eq[-1]): #All cells in this eq must be mines
-            for var in eq[0 : len(eq) - 1]:
+            for var in eq[0 : len(eq) - 1]: #iterate over the variables in eq
                 (r, c) = indexToTuple(var, agent.dim)
-                if (agent.board[r][c].type != Cell.MINE):
+                if (agent.board[r][c].type != Cell.MINE): #if the cell is not already a tripped mine
                     #print("inferred mine " + str((r, c)) + " or " + str(var))
-                    agent.identifyMine((r, c))
-                    KB = addEq(KB, [var, 1])
-                    madeInference = True
+                    agent.identifyMine((r, c)) #identify the cell as an inferred mine
+                    KB = addEq(KB, [var, 1]) #add the equation [(r, c) = 1] into the KB
+                    madeInference = True #flag to indicate an inference has been made
         elif (eq[-1] == 0): #All variables in this eq must be safe
             for var in eq[0 : len(eq) - 1]:
                 (r, c) = indexToTuple(var, agent.dim)
@@ -116,9 +115,9 @@ def display(dim,agent):
     print("Revealed Cells: " + str(numRevealed))
     print("Identified Mines/Total Mines: " + str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
 
-dim = 30
+dim = 10
 gb = Board(dim)
-gb.set_mines(300)
+gb.set_mines(40)
 
 print(gb.board)
 
@@ -126,5 +125,3 @@ ag = Agent(dim)
 strategy2(gb,dim,ag)
 
 display(dim,ag)
-# a = [0, 1, 2, 3, 4, 5]
-# print(a[len(a) - 1]) 
