@@ -16,6 +16,7 @@ def strategy2(gboard, dim, agent):
             r = rnd.randint(0,dim-1)
             c = rnd.randint(0,dim-1)
         currentCell = agent.checkCell((r,c),gboard) #check the cell at (r, c)
+        #print("Checked cell: " + str((r, c)) + " or " + str(tupleToIndex(r, c, dim)))
         if (currentCell.type == -1): #the revealed cell is a mine
             #print("tripped at " + str((r, c)))
             newEq = [tupleToIndex(r, c, dim), 1]
@@ -28,11 +29,15 @@ def strategy2(gboard, dim, agent):
                 newEq2.append(tupleToIndex(n[0], n[1], dim))
             newEq2.append(currentCell.type)
             KB = addEq(KB, newEq2) #insert the equation [(neighbor1) + (neighbor2) + ... + (neighborN) = hint] into the KB
-        #print("KB " + str(KB))
+
+        #print("KB (Before Infer): " + str(KB))
+
         checkForInference(KB, agent, inferredSafeSet) #check to see if a valid inference can be made
         if (len(inferredSafeSet) > 0): #if a cell is inferred to be safe, reveal it next
             (r, c) = inferredSafeSet.pop()
 
+        #print("KB (After Infer): " + str(KB))
+        
 def addEq(KB, equation): #add an equation to the KB
     equation = reduceEq(KB, equation) #reduce the new equation by every equation in the KB
     if(len(equation) == 1): #if the equation is already contained in the KB, skip
@@ -47,10 +52,12 @@ def checkForInference(KB, agent, safeSet):
         if (len(eq) - 1 == eq[-1]): #All cells in this eq must be mines
             for var in eq[0 : len(eq) - 1]: #iterate over the variables in eq
                 (r, c) = indexToTuple(var, agent.dim)
-                if (agent.board[r][c].type != Cell.MINE): #if the cell is not already a tripped mine
+                if (agent.board[r][c].type != Cell.MINE): #if the cell is not a tripped or inferred mine
                     #print("inferred mine " + str((r, c)) + " or " + str(var))
                     agent.identifyMine((r, c)) #identify the cell as an inferred mine
+                    #print("KB (Pre-Split):  " + str(KB))
                     KB = addEq(KB, [var, 1]) #add the equation [(r, c) = 1] into the KB
+                    #print("KB (Post-split): " + str(KB))
                     madeInference = True #flag to indicate an inference has been made
         elif (eq[-1] == 0): #All variables in this eq must be safe
             for var in eq[0 : len(eq) - 1]:
@@ -59,7 +66,9 @@ def checkForInference(KB, agent, safeSet):
                     continue
                 safeSet.add((r, c))
                 #print("inferred safe " + str((r, c)) + " or " + str(var))
+                #print("KB (Pre-Split):  " + str(KB))
                 KB = addEq(KB, [var, 0])
+                #print("KB (Post-split): " + str(KB))
                 madeInference = True
     if(madeInference): #if an inference was made call again
         checkForInference(KB, agent, safeSet)
@@ -88,6 +97,7 @@ def reduceEq(KB, newEq):
 
 def tupleToIndex(r, c, dim):
     return dim * r + c #converts cell tuples to unique integers
+
 def indexToTuple(i, dim):
     return (int(i / dim), i % dim) #converts the unique integers back into their respective tuples
 
@@ -115,9 +125,9 @@ def display(dim,agent):
     print("Revealed Cells: " + str(numRevealed))
     print("Identified Mines/Total Mines: " + str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
 
-dim = 10
+dim = 4
 gb = Board(dim)
-gb.set_mines(40)
+gb.set_mines(6)
 
 print(gb.board)
 
