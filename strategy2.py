@@ -4,6 +4,7 @@ import random as rnd
 import numpy as np
 
 #TODO resolve KB inefficiency
+#Line 80 check order
 
 def strategy2(gboard, dim, agent):
     KB = []
@@ -36,7 +37,7 @@ def strategy2(gboard, dim, agent):
         if (len(inferredSafeSet) > 0): #if a cell is inferred to be safe, reveal it next
             (r, c) = inferredSafeSet.pop()
 
-        print("KB (After Infer): " + str(KB))
+        print("KB (After Infer):  " + str(KB))
         
 def addEq(KB, equation): #add an equation to the KB
     equation = reduceEq(KB, equation) #reduce the new equation by every equation in the KB
@@ -55,9 +56,9 @@ def checkForInference(KB, agent, safeSet):
                 if (agent.board[r][c].type != Cell.MINE): #if the cell is not a tripped or inferred mine
                     print("inferred mine " + str((r, c)) + " or " + str(var))
                     agent.identifyMine((r, c)) #identify the cell as an inferred mine
-                    #print("KB (Pre-Split):  " + str(KB))
+                    print("KB (Pre-Split):     " + str(KB))
                     KB = addEq(KB, [var, 1]) #add the equation [(r, c) = 1] into the KB
-                    #print("KB (Post-split): " + str(KB))
+                    print("KB (Post-split):    " + str(KB))
                     madeInference = True #flag to indicate an inference has been made
         elif (eq[-1] == 0): #All variables in this eq must be safe
             for var in eq[0 : len(eq) - 1]:
@@ -66,9 +67,9 @@ def checkForInference(KB, agent, safeSet):
                     continue
                 safeSet.add((r, c))
                 print("inferred safe " + str((r, c)) + " or " + str(var))
-                #print("KB (Pre-Split):  " + str(KB))
+                print("KB (Pre-Split):     " + str(KB))
                 KB = addEq(KB, [var, 0])
-                #print("KB (Post-split): " + str(KB))
+                print("KB (Post-split):    " + str(KB))
                 madeInference = True
     if(madeInference): #if an inference was made call again
         checkForInference(KB, agent, safeSet)
@@ -76,7 +77,11 @@ def checkForInference(KB, agent, safeSet):
 def reduceKB(KB, newEq):
     KB2 = []
     for eq in KB:
-        if (eq == newEq): #if the equation is already in the KB, skip
+        tempEq = eq[0:len(eq) - 1]
+        tempEq.sort()
+        tempNewEq = newEq[0:len(newEq) - 1]
+        tempNewEq.sort()
+        if (tempEq == tempNewEq and eq[len(eq) - 1] == newEq[len(newEq) - 1]): #if the equation is already in the KB, skip
             continue
         elif (set(newEq[0 : len(newEq) - 1]).issubset(set(eq[0 : len(eq) - 1]))): #if newEq is a subset of an equation in KB
             constraintDifference = eq[len(eq) - 1] - newEq[len(newEq) - 1] #store the difference of the constraint values
@@ -125,9 +130,9 @@ def display(dim,agent):
     print("Revealed Cells: " + str(numRevealed))
     print("Identified Mines/Total Mines: " + str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
 
-dim = 4
+dim = 3
 gb = Board(dim)
-gb.set_mines(6)
+gb.set_mines(3)
 
 print(gb.board)
 
