@@ -1,9 +1,9 @@
 from Agent import Agent,Cell 
 from Board import Board, findNeighboringCoords
-from queue import Queue
 import random as rnd
 import numpy as np
-import copy as copy
+
+#TODO resolve KB inefficiency
 
 def strategy2(gboard, dim, agent):
     KB = []
@@ -16,7 +16,7 @@ def strategy2(gboard, dim, agent):
             r = rnd.randint(0,dim-1)
             c = rnd.randint(0,dim-1)
         currentCell = agent.checkCell((r,c),gboard) #check the cell at (r, c)
-        #print("Checked cell: " + str((r, c)) + " or " + str(tupleToIndex(r, c, dim)))
+        print("Checked cell: " + str((r, c)) + " or " + str(tupleToIndex(r, c, dim)))
         if (currentCell.type == -1): #the revealed cell is a mine
             #print("tripped at " + str((r, c)))
             newEq = [tupleToIndex(r, c, dim), 1]
@@ -30,13 +30,13 @@ def strategy2(gboard, dim, agent):
             newEq2.append(currentCell.type)
             KB = addEq(KB, newEq2) #insert the equation [(neighbor1) + (neighbor2) + ... + (neighborN) = hint] into the KB
 
-        #print("KB (Before Infer): " + str(KB))
+        print("KB (Before Infer): " + str(KB))
 
         checkForInference(KB, agent, inferredSafeSet) #check to see if a valid inference can be made
         if (len(inferredSafeSet) > 0): #if a cell is inferred to be safe, reveal it next
             (r, c) = inferredSafeSet.pop()
 
-        #print("KB (After Infer): " + str(KB))
+        print("KB (After Infer): " + str(KB))
         
 def addEq(KB, equation): #add an equation to the KB
     equation = reduceEq(KB, equation) #reduce the new equation by every equation in the KB
@@ -53,7 +53,7 @@ def checkForInference(KB, agent, safeSet):
             for var in eq[0 : len(eq) - 1]: #iterate over the variables in eq
                 (r, c) = indexToTuple(var, agent.dim)
                 if (agent.board[r][c].type != Cell.MINE): #if the cell is not a tripped or inferred mine
-                    #print("inferred mine " + str((r, c)) + " or " + str(var))
+                    print("inferred mine " + str((r, c)) + " or " + str(var))
                     agent.identifyMine((r, c)) #identify the cell as an inferred mine
                     #print("KB (Pre-Split):  " + str(KB))
                     KB = addEq(KB, [var, 1]) #add the equation [(r, c) = 1] into the KB
@@ -65,7 +65,7 @@ def checkForInference(KB, agent, safeSet):
                 if(agent.board[r][c].revealed == True or (r, c) in safeSet):
                     continue
                 safeSet.add((r, c))
-                #print("inferred safe " + str((r, c)) + " or " + str(var))
+                print("inferred safe " + str((r, c)) + " or " + str(var))
                 #print("KB (Pre-Split):  " + str(KB))
                 KB = addEq(KB, [var, 0])
                 #print("KB (Post-split): " + str(KB))
