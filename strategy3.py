@@ -1,9 +1,10 @@
 import copy
 import random as rnd
+from collections import deque
 
 from Agent import Agent, Cell
 from Board import Board
-from strategy2 import addEq
+from strategy2 import addEq, indexToTuple, tupleToIndex
 
 """
     KB = []
@@ -45,9 +46,10 @@ def configIsValid(KB):
 def findValidConfigs(KB, variables, simulatedBombVariables, bombCounts):
     validConfigs = 0
     variable = variables[0]
+
     safeEq = [variable, 0]
     safeKB = copy.deepcopy(KB)
-    addEq(safeKB, safeEq)
+    safeKB = addEq(safeKB, safeEq)
     safeConfigIsValid = configIsValid(safeKB)
     if len(variables) == 1 and safeConfigIsValid:
         validConfigs += 1
@@ -56,9 +58,10 @@ def findValidConfigs(KB, variables, simulatedBombVariables, bombCounts):
     elif safeConfigIsValid:
         validConfigs += findValidConfigs(
             safeKB, variables[1:], simulatedBombVariables.copy(), bombCounts)
+
     bombEq = [variable, 1]
     bombKB = copy.deepcopy(KB)
-    addEq(bombKB, bombEq)
+    bombKB = addEq(bombKB, bombEq)
     simulatedBombVariables.append(variable)
     bombConfigIsValid = configIsValid(bombKB)
     if len(variables) == 1 and bombConfigIsValid:
@@ -68,6 +71,7 @@ def findValidConfigs(KB, variables, simulatedBombVariables, bombCounts):
     elif bombConfigIsValid:
         validConfigs += findValidConfigs(
             bombKB, variables[1:], simulatedBombVariables.copy(), bombCounts)
+
     return validConfigs
 
 
@@ -82,63 +86,49 @@ def strategy3(gboard, dim, agent):
         5. If no cell was safe, pick minimum probability in the board
     """
 
-    # pick a corner at random to start the game
+    KB = []
+    variables = []
+    inferredSafeCoords = deque()
+    inferredMineCoords = deque()
+
     corners = [(0, 0), (0, dim - 1), (dim - 1, 0),
                (dim - 1, dim - 1)]
-    coords = corners[rnd.randint(0, len(corners))]
-    firstCell = agent.checkCell(coords, gboard)
-    clue = firstCell.type
-    corners.remove(coords)
-
-    while clue == Cell.MINE:
-        if len(corners) == 0:
-            coords = (rnd.randint(0, dim), rnd.randint(0, dim))
-        else:
-            coords = corners[rnd.randint(0, len(corners))]
-            corners.remove(coords)
-        firstCell = agent.checkCell(coords, gboard)
-        clue = firstCell.type
-
-    # based on revelation from first pick, update KB accordingly
-    neighbors = firstCell.neighbors
-    if clue == len(firstCell.neighbors):
-        for n in neighbors:
-            agent.identifyMine(n)
-    elif clue == 0:
-        for n in neighbors:
-            agent.checkCell(n)
-    else:
-        for n in neighbors:
-            agent.board[n].probability = clue / len(firstCell.neighbors)
-
-    # the actual game loop (until all Cells on Agent Board have been explored)
+    cornerIndex = 0
+    r, c = corners[cornerIndex]
 
     while not agent.isFinished():
-        cell, status = calculateProbability(agent)
-        if status == Cell.MINE:
-            agent.identifyMine(cell.coords)
+        currentCell = agent.checkCell((r, c), gboard)
+        if (currentCell.type == Cell.MINE):
+            bombEq = [tupleToIndex(r, c, dim), 1]
+            KB = addEq(KB, bombEq)
         else:
-            agent.checkCell(cell.coords)
+            safeEq = [tupleToIndex(r, c, dim), 0]
+            KB = addEq(KB, safeEq)
+            clueEq = []
+            # find all neighbors of (r, c)
+            for neighbor in currentCell.neighbors:
+                nrow, ncol = neighbor
+                neighborIndex = tupleToIndex(nrow, ncol, dim)
+                clueEq.append(neighborIndex)
+                variables.append(neighborIndex)
+            clueEq.append(currentCell.type)
+            KB = addEq(KB, clueEq)
+        if len(variables) == 0:
+            cornerIndex += 1
+            if cornerIndex < len(corners):
+                r, c = corners[cornerIndex]
+            else:
+                r = rnd.randint(0, dim - 1)
+                c = rnd.randint(0, dim - 1)
+                while agent.hasExplored((r, c)):
+                    r = rnd.randint(0, dim - 1)
+                    c = rnd.randint(0, dim - 1)
+        else:
+            safeCoords, mineCoords, safestCoords = calculateCellProbabilities(
+                KB, variables)
 
     return
 
 
-def calculateProbability(agent):  # bulk of strategy 3
-    minProbability = 1
-    minProbabilityCell = None
-    # probability logic
-    currCellProbability = -1  # prob will end up starting with another val
-    currCell = None
-    # loop for probabilty
-    while True:
-        # logic logic logic
-        if currCellProbability == 1:
-            return (currCell, Cell.MINE)
-        elif currCellProbability == 0:
-            return (currCell, Cell.SAFE)
-
-        if currCellProbability < minProbability:
-            minProbability = currCellProbability
-            minProbabilityCell = currCell
-
-    return (minProbabilityCell, Cell.UNCHECKED)
+def calculateCellProbabilities(KB, variables):
+    return set(), set(), (0, 0)
