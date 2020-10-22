@@ -1,3 +1,5 @@
+import random as rnd
+
 from Board import findNeighboringCoords
 
 
@@ -49,6 +51,14 @@ class Agent:
 
     def isFinished(self):
         return (self.dim**2 == len(self.revealedCoords) + len(self.identifiedMineCoords))
+
+    def chooseRandomCoords(self):
+        r = rnd.randint(0, dim - 1)
+        c = rnd.randint(0, dim - 1)
+        while self.hasExplored((r, c)):
+            r = rnd.randint(0, dim - 1)
+            c = rnd.randint(0, dim - 1)
+        return r, c
 
 
 class Cell:
