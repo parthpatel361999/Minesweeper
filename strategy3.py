@@ -1,7 +1,74 @@
+import copy
 import random as rnd
 
 from Agent import Agent, Cell
 from Board import Board
+from strategy2 import addEq
+
+"""
+    KB = []
+    varList = []
+    simulatedBombVars = []
+    bombCounts = {}
+    -----------
+    validConfigs = 0
+    -----------
+    1. add first var in varList to KB as safe (var = 0)
+    2. if leaf node:
+        a. if valid config:
+            i. validConfigs += 1
+            ii. for var in simulatedBombVars: bombCounts[var] += 1
+    3. else:
+        a. if valid config:
+            validConfigts += function(KB, varList[1, end], simulatedBombVars, bombVars)
+    4. add first var in varList to KB as bomb (var = 1)
+    5. add var to simulatedBombVars
+    6. if leaf node:
+        a. if valid config:
+            i. validConfigs += 1
+            ii. for var in simulatedBombVars: bombCounts[var] += 1
+    7. else:
+        a. if valid config:
+            validConfigs += function(KB, varList[1, end], simulatedBombVars, bombVars)
+    8. return validConfigs        
+
+"""
+
+
+def configIsValid(KB):
+    for eq in KB:
+        if len(eq) - 1 > eq[-1] or eq[-1] < 0:
+            return False
+    return True
+
+
+def findValidConfigs(KB, variables, simulatedBombVariables, bombCounts):
+    validConfigs = 0
+    variable = variables[0]
+    safeEq = [variable, 0]
+    safeKB = copy.deepcopy(KB)
+    addEq(safeKB, safeEq)
+    safeConfigIsValid = configIsValid(safeKB)
+    if len(variables) == 1 and safeConfigIsValid:
+        validConfigs += 1
+        for bombVar in simulatedBombVariables:
+            bombCounts[bombVar] += 1
+    elif safeConfigIsValid:
+        validConfigs += findValidConfigs(
+            safeKB, variables[1:], simulatedBombVariables.copy(), bombCounts)
+    bombEq = [variable, 1]
+    bombKB = copy.deepcopy(KB)
+    addEq(bombKB, bombEq)
+    simulatedBombVariables.append(variable)
+    bombConfigIsValid = configIsValid(bombKB)
+    if len(variables) == 1 and bombConfigIsValid:
+        validConfigs += 1
+        for bombVar in simulatedBombVariables:
+            bombCounts[bombVar] += 1
+    elif bombConfigIsValid:
+        validConfigs += findValidConfigs(
+            bombKB, variables[1:], simulatedBombVariables.copy(), bombCounts)
+    return validConfigs
 
 
 # double improved agent
