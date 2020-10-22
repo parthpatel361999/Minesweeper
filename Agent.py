@@ -44,6 +44,9 @@ class Agent:
             neighborCell.numMineNeighbors += 1
         return cell
 
+    def hasExplored(self, coords):
+        return coords in self.revealedCoords or coords in self.identifiedMineCoords
+
     def isFinished(self):
         return (self.dim**2 == len(self.revealedCoords) + len(self.identifiedMineCoords))
 
@@ -64,4 +67,4 @@ class Cell:
         self.probabilityIsMine = 0
 
     def isIdentifiedMine(self):
-        return not self.revealed and self.type == Cell.MINE
+        return not self.revealed and self.type == self.MINE
