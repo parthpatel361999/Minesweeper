@@ -63,9 +63,10 @@ def strategy3(gboard, dim, agent):
                 KB = addMineEq(KB, mineCell, dim)
             # CHECK INFERENCE
             inferredSafeSet = set()
-            KB = checkForInference(KB, agent, inferredSafeSet)
+            KB, madeInference = checkForInference(KB, agent, inferredSafeSet)
             for coords in inferredSafeSet:
-                variables.remove(tupleToIndex(coords, dim))
+                r, c = coords
+                variables.remove(tupleToIndex(r, c, dim))
                 safeCell = agent.checkCell(coords, gboard)
                 KB = addSafeEq(KB, safeCell, dim, agent, variables)
             ###
@@ -86,17 +87,15 @@ def addSafeEq(KB, cell, dim, agent, variables=None):
         variables = set()
     r, c = cell.coords
     safeEq = [tupleToIndex(r, c, dim), 0]
-    print("safe", safeEq)
     KB = addEq(KB, safeEq)
     clueEq = []
     for neighbor in cell.neighbors:
         nRow, nCol = neighbor
         neighborIndex = tupleToIndex(nRow, nCol, dim)
         clueEq.append(neighborIndex)
-        if not agent.hasExplored((nRow, nCol)):
+        if not agent.hasExplored(neighbor):
             variables.add(neighborIndex)
     clueEq.append(cell.type)
-    print("clue", clueEq)
     KB = addEq(KB, clueEq)
     return KB
 

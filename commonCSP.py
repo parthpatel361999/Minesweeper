@@ -64,9 +64,6 @@ def reduceKB(KB, newEq):
 def reduceEq(KB, newEq):
     for eq in KB:  # for every equation eq in the KB, reduce the new equation by eq
         # if eq is a subset of the new equation
-        print("New", newEq)
-        print("eq", eq)
-
         if (set(eq[0: len(eq) - 1]).issubset(set(newEq[0: len(newEq) - 1]))):
             # store the difference of the constraint values
             constraintDifference = newEq[len(newEq) - 1] - eq[len(eq) - 1]
