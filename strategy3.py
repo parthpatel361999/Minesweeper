@@ -2,9 +2,8 @@ import copy
 import random as rnd
 from collections import deque
 
-from Agent import Agent, Cell
-from Board import Board
-from strategy2 import addEq, indexToTuple, tupleToIndex
+from common import Agent, Board, Cell
+from commonCSP import addEq, indexToTuple, tupleToIndex
 
 
 # double improved agent
@@ -17,24 +16,22 @@ def strategy3(gboard, dim, agent):
     variables = set()
 
     """
-    Create a list of the preferred coordinates for the agent to choose from when no better option is
-    available. In thise case, the preferred coordinates are the corners of the minefield. For the
-    first choice of where the agent should explore, choose the first (top-left) corner.
+    If there are preferred coordinates for the agent to choose from, choose the first of those. Else,
+    choose a random pair of coordinates for the first move.
     """
-    corners = [(0, 0), (0, dim - 1), (dim - 1, 0),
-               (dim - 1, dim - 1)]
-    cornerIndex = 0
-    r, c = corners[cornerIndex]
+    r, c = agent.choosePreferredOrRandomCoords()
 
     while not agent.isFinished():
         """
         Check the current cell. Based on the type of the mine, add the respective equations and variables.
         """
+        print(r, c)
         currentCell = agent.checkCell((r, c), gboard)
-        if (currentCell.type == Cell.MINE):
+        if currentCell.type == Cell.MINE:
             KB = addMineEq(KB, currentCell, dim)
         else:
             KB = addSafeEq(KB, currentCell, dim, agent, variables)
+        print("variables:", len(variables))
 
         """
         If there are no unknown variables in the knowledge base, choose one of the preferred coordinates.
@@ -44,12 +41,7 @@ def strategy3(gboard, dim, agent):
         probabilities, so choose the preferred coordinates instead.
         """
         if len(variables) == 0:
-            cornerIndex += 1
-            if cornerIndex < len(corners):
-                r, c = corners[cornerIndex]
-            else:
-                r, c = agent.chooseRandomCoords()
-
+            r, c = agent.choosePreferredOrRandomCoords()
         else:
             """
             Calculate the probabilities for all variables, and find the variables that are guaranteed to
@@ -64,27 +56,26 @@ def strategy3(gboard, dim, agent):
             for variable in safeVariables:
                 variables.remove(variable)
                 safeCell = agent.checkCell(indexToTuple(variable, dim), gboard)
-                KB = addSafeEq(KB, safeCell, dim, variables)
+                KB = addSafeEq(KB, safeCell, dim, agent, variables)
             for variable in mineVariables:
                 variables.remove(variable)
                 mineCell = agent.identifyMine(indexToTuple(variable, dim))
                 KB = addMineEq(KB, mineCell, dim)
-            if not safestVariable is None:
+            if safestVariable is not None:
+                variables.remove(safestVariable)
                 r, c = indexToTuple(safestVariable, dim)
             else:
-                cornerIndex += 1
-                if cornerIndex < len(corners):
-                    r, c = corners[cornerIndex]
-                else:
-                    r, c = agent.chooseRandomCoords()
+                r, c = agent.choosePreferredOrRandomCoords()
 
 
-def addSafeEq(KB, cell, dim, agent, variables=set()):
+def addSafeEq(KB, cell, dim, agent, variables=None):
     """
     Add an equation identifying the cell's coordinates as safe to the knowledge base. Then, create a clue 
     equation for all of the cell's neighbors, and add those neighbors to the unknown variables list if
     they haven't been explored by the agent already.
     """
+    if variables is None:
+        variables = set()
     r, c = cell.coords
     safeEq = [tupleToIndex(r, c, dim), 0]
     KB = addEq(KB, safeEq)
@@ -135,7 +126,6 @@ def calculateVariableProbabilities(KB, variables):
 def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
     validConfigs = 0
     variable = variables[0]
-
     safeEq = [variable, 0]
     safeKB = copy.deepcopy(KB)
     safeKB = addEq(safeKB, safeEq)
@@ -166,6 +156,46 @@ def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
 
 def configIsValid(KB):
     for eq in KB:
-        if len(eq) - 1 > eq[-1] or eq[-1] < 0:
+        if len(eq) - 1 < eq[-1] or eq[-1] < 0:
             return False
     return True
+
+
+def display(dim, agent):
+    numTripped = 0
+    numIdentifiedMines = 0
+    numRevealed = 0
+    display = Board(dim)
+    for i in range(0, dim):
+        for j in range(0, dim):
+            if((i, j) in agent.trippedMineCoords):
+                display.board[i][j] = '2'
+                numTripped += 1
+            elif((i, j) in agent.identifiedMineCoords):
+                display.board[i][j] = '1'
+                numIdentifiedMines += 1
+            elif((i, j) in agent.revealedCoords):
+                display.board[i][j] = '9'
+                numRevealed += 1
+            else:
+                continue
+    print(display.board)
+    print("Tripped Mines: " + str(numTripped))
+    print("Identified Mines: " + str(numIdentifiedMines))
+    print("Revealed Cells: " + str(numRevealed))
+    print("Identified Mines/Total Mines: " +
+          str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
+
+
+dim = 15
+gb = Board(dim)
+gb.set_mines(int(dim**2 * 0.4))
+
+print("Strat 3")
+print(gb.board)
+corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
+ag = Agent(dim=dim, preferredCoords=corners)
+strategy3(gb, dim, ag)
+
+print("Display")
+display(dim, ag)
