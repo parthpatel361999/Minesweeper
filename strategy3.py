@@ -3,7 +3,7 @@ import random as rnd
 from collections import deque
 
 from common import Agent, Board, Cell
-from commonCSP import addEq, indexToTuple, tupleToIndex
+from commonCSP import addEq, checkForInference, indexToTuple, tupleToIndex
 
 
 # double improved agent
@@ -61,6 +61,14 @@ def strategy3(gboard, dim, agent):
                 variables.remove(variable)
                 mineCell = agent.identifyMine(indexToTuple(variable, dim))
                 KB = addMineEq(KB, mineCell, dim)
+            # CHECK INFERENCE
+            inferredSafeSet = set()
+            KB = checkForInference(KB, agent, inferredSafeSet)
+            for coords in inferredSafeSet:
+                variables.remove(tupleToIndex(coords, dim))
+                safeCell = agent.checkCell(coords, gboard)
+                KB = addSafeEq(KB, safeCell, dim, agent, variables)
+            ###
             if safestVariable is not None:
                 variables.remove(safestVariable)
                 r, c = indexToTuple(safestVariable, dim)
@@ -78,6 +86,7 @@ def addSafeEq(KB, cell, dim, agent, variables=None):
         variables = set()
     r, c = cell.coords
     safeEq = [tupleToIndex(r, c, dim), 0]
+    print("safe", safeEq)
     KB = addEq(KB, safeEq)
     clueEq = []
     for neighbor in cell.neighbors:
@@ -87,6 +96,7 @@ def addSafeEq(KB, cell, dim, agent, variables=None):
         if not agent.hasExplored((nRow, nCol)):
             variables.add(neighborIndex)
     clueEq.append(cell.type)
+    print("clue", clueEq)
     KB = addEq(KB, clueEq)
     return KB
 
