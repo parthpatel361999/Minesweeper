@@ -69,22 +69,20 @@ def checkForInference(KB, agent, safeSet):
 #check case when duplicate clues get added
 def reduceKB(KB, newEq):
     newKB = []
+    modified = []
     for eq in KB:
-        #this check is covered by reduceEq
-        # tempEq = eq[0:len(eq) - 1] 
-        # tempEq.sort()
-        # tempNewEq = newEq[0:len(newEq) - 1]
-        # tempNewEq.sort()
-        # if (tempEq == tempNewEq and eq[len(eq) - 1] == newEq[len(newEq) - 1]): #if the equation is already in the KB, skip
-        #     continue
-        if (set(newEq[0 : len(newEq) - 1]).issubset(set(eq[0 : len(eq) - 1]))): #if newEq is a subset of an equation in KB
+        if (eq != newEq and set(newEq[0 : len(newEq) - 1]).issubset(set(eq[0 : len(eq) - 1]))): #if newEq is a subset of an equation in KB
             constraintDifference = eq[len(eq) - 1] - newEq[len(newEq) - 1] #store the difference of the constraint values
             e = list(set(eq[0 : len(eq) - 1]) - set(newEq[0 : len(newEq) - 1])) #find the set difference
             e.append(constraintDifference) #append the constaint difference to the end of the equation
             if(e not in newKB):
                 newKB.append(e)
+                modified.append(e)
         elif(eq not in newKB):
             newKB.append(eq)
+    if(modified != []):
+        for eq in modified:
+            newKB = reduceKB(newKB, eq)
     return newKB
 
 def reduceEq(KB, newEq):
@@ -128,9 +126,9 @@ def display(dim,agent):
     print("Revealed Cells: " + str(numRevealed))
     print("Identified Mines/Total Mines: " + str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
 
-dim = 20
+dim = 30
 gb = Board(dim)
-gb.set_mines(160)
+gb.set_mines(dim**2 * 0.4)
 
 print(gb.board)
 
