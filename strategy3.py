@@ -25,13 +25,16 @@ def strategy3(gboard, dim, agent):
         """
         Check the current cell. Based on the type of the mine, add the respective equations and variables.
         """
-        print(r, c)
+        print(r, c, "or", tupleToIndex(r, c, dim))
+        display(dim, agent)
         currentCell = agent.checkCell((r, c), gboard)
         if currentCell.type == Cell.MINE:
             KB = addMineEq(KB, currentCell, dim)
         else:
             KB = addSafeEq(KB, currentCell, dim, agent, variables)
         print("variables:", variables)
+        print(agent.revealedCoords)
+        print(agent.identifiedMineCoords)
 
         """
         If there are no unknown variables in the knowledge base, choose one of the preferred coordinates.
@@ -40,7 +43,9 @@ def strategy3(gboard, dim, agent):
         There is no point in calculating probabilities if there are no variables for which to calculate
         probabilities, so choose the preferred coordinates instead.
         """
-        if len(variables) == 0:
+        if agent.isFinished() and len(variables) == 0:
+            break
+        elif len(variables) == 0:
             r, c = agent.choosePreferredOrRandomCoords()
         else:
             """
@@ -92,7 +97,7 @@ def strategy3(gboard, dim, agent):
                     r, c = indexToTuple(variable, dim)
                     variables.remove(variable)
                     break
-            if r is None and c is None:
+            if r is None and c is None and not agent.isFinished():
                 r, c = agent.choosePreferredOrRandomCoords()
 
 
@@ -231,7 +236,7 @@ def display(dim, agent):
           str(numIdentifiedMines / int(agent.dim**2 * 0.4)))
 
 
-dim = 10
+dim = 5
 gb = Board(dim)
 gb.set_mines(int(dim**2 * 0.4))
 
@@ -242,4 +247,7 @@ ag = Agent(dim=dim, preferredCoords=corners)
 strategy3(gb, dim, ag)
 
 print("Display")
+print(ag.revealedCoords)
+print(ag.identifiedMineCoords)
+print(gb.board)
 display(dim, ag)
