@@ -10,6 +10,8 @@ class Board:
 
     def set_mines(self, num_mines):
         count = 0
+        if num_mines > self.dim**2 or num_mines < 0:
+            print('invalid number of mines')
         self.num_mines = num_mines
         while count < num_mines:
             pos = rnd.randint(0, self.dim*self.dim-1)
