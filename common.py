@@ -79,7 +79,7 @@ class Agent:
         return coords in self.revealedCoords or coords in self.identifiedMineCoords
 
     def isFinished(self):
-        return self.dim ** 2 == len(self.revealedCoords) + len(self.identifiedMineCoords)
+        return len(self.revealedCoords) + len(self.identifiedMineCoords) == self.dim**2
 
     def choosePreferredOrRandomCoords(self):
         if self.preferredCoordsExplored < len(self.preferredCoords):

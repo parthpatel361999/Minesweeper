@@ -3,7 +3,7 @@ import random as rnd
 from collections import deque
 
 from common import Agent, Board, Cell
-from commonCSP import addEq, checkForInference, indexToTuple, tupleToIndex
+from commonCSP import addEq, indexToTuple, tupleToIndex
 
 
 # double improved agent
@@ -31,7 +31,7 @@ def strategy3(gboard, dim, agent):
             KB = addMineEq(KB, currentCell, dim)
         else:
             KB = addSafeEq(KB, currentCell, dim, agent, variables)
-        print("variables:", len(variables))
+        print("variables:", variables)
 
         """
         If there are no unknown variables in the knowledge base, choose one of the preferred coordinates.
@@ -51,29 +51,48 @@ def strategy3(gboard, dim, agent):
             coordinates as the next to be explored; else, choose from the preferred coordinates (or
             random coordinates, if necessary).
             """
-            safeVariables, mineVariables, safestVariable = calculateVariableProbabilities(
+            safeVariables, mineVariables, safestVariables = calculateVariableProbabilities(
                 KB, list(variables))
+            print("safeVariables", safeVariables)
+            print("mineVariables", mineVariables)
+            print("safestVariables", safestVariables)
             for variable in safeVariables:
                 variables.remove(variable)
-                safeCell = agent.checkCell(indexToTuple(variable, dim), gboard)
-                KB = addSafeEq(KB, safeCell, dim, agent, variables)
+                coords = indexToTuple(variable, dim)
+                mineCell = agent.checkCell(coords, gboard)
+                KB = addSafeEq(KB, mineCell, dim, agent, variables)
             for variable in mineVariables:
                 variables.remove(variable)
-                mineCell = agent.identifyMine(indexToTuple(variable, dim))
+                coords = indexToTuple(variable, dim)
+                mineCell = agent.identifyMine(coords)
                 KB = addMineEq(KB, mineCell, dim)
             # CHECK INFERENCE
             inferredSafeSet = set()
-            KB, madeInference = checkForInference(KB, agent, inferredSafeSet)
+            inferredMineSet = set()
+            KB, madeInference = checkForInference(
+                KB, agent, safeSet=inferredSafeSet, mineSet=inferredMineSet)
+            while madeInference:
+                KB, madeInference = checkForInference(
+                    KB, agent, safeSet=inferredSafeSet, mineSet=inferredMineSet)
             for coords in inferredSafeSet:
                 r, c = coords
                 variables.remove(tupleToIndex(r, c, dim))
-                safeCell = agent.checkCell(coords, gboard)
-                KB = addSafeEq(KB, safeCell, dim, agent, variables)
+                mineCell = agent.checkCell(coords, gboard)
+                KB = addSafeEq(KB, mineCell, dim, agent, variables)
+            for coords in inferredMineSet:
+                r, c = coords
+                variables.remove(tupleToIndex(r, c, dim))
+                mineCell = agent.identifyMine(coords)
+                KB = addMineEq(KB, mineCell, dim)
             ###
-            if safestVariable is not None:
-                variables.remove(safestVariable)
-                r, c = indexToTuple(safestVariable, dim)
-            else:
+            r = c = None
+            for probabilityVariable in safestVariables:
+                probability, variable = probabilityVariable
+                if variable in variables:
+                    r, c = indexToTuple(variable, dim)
+                    variables.remove(variable)
+                    break
+            if r is None and c is None:
                 r, c = agent.choosePreferredOrRandomCoords()
 
 
@@ -117,8 +136,7 @@ def calculateVariableProbabilities(KB, variables):
     validConfigurations = findValidConfigs(KB, variables, [], mineCounts)
     safeVariables = []
     mineVariables = []
-    minMineProb = 1
-    safestVariable = None
+    safestVariables = []
     for variable in mineCounts:
         if mineCounts[variable] == 0:
             safeVariables.append(variable)
@@ -126,10 +144,9 @@ def calculateVariableProbabilities(KB, variables):
             mineVariables.append(variable)
         else:
             mineProb = mineCounts[variable] / validConfigurations
-            if mineProb < minMineProb:
-                minMineProb = mineProb
-                safestVariable = variable
-    return safeVariables, mineVariables, safestVariable
+            safestVariables.append((mineProb, variable))
+    safestVariables.sort()
+    return safeVariables, mineVariables, safestVariables
 
 
 def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
@@ -170,6 +187,24 @@ def configIsValid(KB):
     return True
 
 
+def checkForInference(KB, agent, safeSet, mineSet):
+    madeInference = False
+    for eq in KB:
+        if (len(eq) - 1 == eq[-1]):
+            for var in eq[0: len(eq) - 1]:
+                (r, c) = indexToTuple(var, agent.dim)
+                if not (agent.hasExplored((r, c)) or (r, c) in mineSet):
+                    mineSet.add((r, c))
+                    madeInference = True
+        elif (eq[-1] == 0):
+            for var in eq[0: len(eq) - 1]:
+                (r, c) = indexToTuple(var, agent.dim)
+                if not (agent.hasExplored((r, c)) or (r, c) in safeSet):
+                    safeSet.add((r, c))
+                    madeInference = True
+    return(KB, madeInference)
+
+
 def display(dim, agent):
     numTripped = 0
     numIdentifiedMines = 0
@@ -193,10 +228,10 @@ def display(dim, agent):
     print("Identified Mines: " + str(numIdentifiedMines))
     print("Revealed Cells: " + str(numRevealed))
     print("Identified Mines/Total Mines: " +
-          str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
+          str(numIdentifiedMines / int(agent.dim**2 * 0.4)))
 
 
-dim = 15
+dim = 10
 gb = Board(dim)
 gb.set_mines(int(dim**2 * 0.4))
 
