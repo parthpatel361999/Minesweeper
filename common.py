@@ -37,7 +37,6 @@ class Agent:
         self.trippedMineCoords = []
         self.identifiedMineCoords = []
         self.preferredCoords = preferredCoords
-        self.preferredCoordsExplored = 0
         self.board = []
         for r in range(dim):
             col = []
@@ -82,12 +81,13 @@ class Agent:
         return len(self.revealedCoords) + len(self.identifiedMineCoords) >= self.dim**2
 
     def choosePreferredOrRandomCoords(self):
-        if self.preferredCoordsExplored < len(self.preferredCoords):
-            coords = self.preferredCoords[self.preferredCoordsExplored]
-            self.preferredCoordsExplored += 1
-            return coords
-        else:
-            return self.chooseRandomCoords()
+        r = c = -1
+        for preferredCoords in self.preferredCoords:
+            if not self.hasExplored(preferredCoords):
+                r, c = preferredCoords
+        if r == -1 and c == -1:
+            r, c = self.chooseRandomCoords()
+        return r, c
 
     def chooseRandomCoords(self):
         r = rnd.randint(0, self.dim - 1)
