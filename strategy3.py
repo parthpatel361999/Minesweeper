@@ -1,4 +1,5 @@
 import copy
+import itertools
 import random as rnd
 from collections import deque
 
@@ -32,7 +33,7 @@ def strategy3(gboard, dim, agent):
             KB = addMineEq(KB, currentCell, dim)
         else:
             KB = addSafeEq(KB, currentCell, dim, agent, variables)
-        print("variables:", str(len(variables)), variables)
+        print("variables:", str(len(variables)))
 
         """
         If there are no unknown variables in the knowledge base, choose one of the preferred coordinates.
@@ -57,19 +58,20 @@ def strategy3(gboard, dim, agent):
             """
             safeVariables, mineVariables, safestVariable = calculateVariableProbabilities(
                 KB, list(variables))
-            # print("safeVariables", safeVariables)
-            # print("mineVariables", mineVariables)
-            # print("safestVariables", safestVariable)
-            for variable in safeVariables:
-                variables.remove(variable)
-                coords = indexToTuple(variable, dim)
-                mineCell = agent.checkCell(coords, gboard)
-                KB = addSafeEq(KB, mineCell, dim, agent, variables)
-            for variable in mineVariables:
-                variables.remove(variable)
-                coords = indexToTuple(variable, dim)
-                mineCell = agent.identifyMine(coords)
-                KB = addMineEq(KB, mineCell, dim)
+            while len(safeVariables) > 0 or len(mineVariables) > 0:
+                for variable in safeVariables:
+                    variables.remove(variable)
+                    coords = indexToTuple(variable, dim)
+                    safeCell = agent.checkCell(coords, gboard)
+                    KB = addSafeEq(KB, safeCell, dim, agent, variables)
+                for variable in mineVariables:
+                    variables.remove(variable)
+                    coords = indexToTuple(variable, dim)
+                    mineCell = agent.identifyMine(coords)
+                    KB = addMineEq(KB, mineCell, dim)
+                safeVariables, mineVariables, safestVariable = calculateVariableProbabilities(
+                    KB, list(variables))
+
             if safestVariable is not None:
                 r, c = indexToTuple(safestVariable, dim)
                 variables.remove(safestVariable)
@@ -114,7 +116,7 @@ def calculateVariableProbabilities(KB, variables):
     mineCounts = {}
     for variable in variables:
         mineCounts[variable] = 0
-    validConfigurations = findValidConfigs(KB, variables, [], mineCounts)
+    validConfigurations = findValidConfigs(KB, variables, [],  mineCounts)
     safeVariables = []
     mineVariables = []
     minMineProb = 1.0
@@ -134,33 +136,64 @@ def calculateVariableProbabilities(KB, variables):
 
 def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
     validConfigs = 0
-    variable = variables[0]
-    safeEq = [variable, 0]
-    safeKB = copy.deepcopy(KB)
-    safeKB = addEq(safeKB, safeEq)
-    safeConfigIsValid = configIsValid(safeKB)
-    if len(variables) == 1 and safeConfigIsValid:
-        validConfigs += 1
-        for mineVar in simulatedMineVariables:
-            mineCounts[mineVar] += 1
-    elif safeConfigIsValid:
-        validConfigs += findValidConfigs(
-            safeKB, variables[1:], simulatedMineVariables.copy(), mineCounts)
 
-    mineEq = [variable, 1]
-    mineKB = copy.deepcopy(KB)
-    mineKB = addEq(mineKB, mineEq)
-    simulatedMineVariables.append(variable)
-    mineConfigIsValid = configIsValid(mineKB)
-    if len(variables) == 1 and mineConfigIsValid:
-        validConfigs += 1
-        for mineVar in simulatedMineVariables:
-            mineCounts[mineVar] += 1
-    elif mineConfigIsValid:
-        validConfigs += findValidConfigs(
-            mineKB, variables[1:], simulatedMineVariables.copy(), mineCounts)
+    if len(variables) < 1:
+        return validConfigs
+
+    variable = variables[0]
+    existingAssignment = findExistingAssignment(KB, variable)
+
+    if existingAssignment is not None:
+        if existingAssignment == 0:
+            if len(variables) == 1:
+                validConfigs += 1
+                for mineVar in simulatedMineVariables:
+                    mineCounts[mineVar] += 1
+            else:
+                validConfigs += findValidConfigs(
+                    KB, variables[1:], simulatedMineVariables.copy(), mineCounts)
+        elif existingAssignment == 1:
+            simulatedMineVariables.append(variable)
+            if len(variables) == 1:
+                validConfigs += 1
+                for mineVar in simulatedMineVariables:
+                    mineCounts[mineVar] += 1
+            else:
+                validConfigs += findValidConfigs(
+                    KB, variables[1:], simulatedMineVariables.copy(), mineCounts)
+    else:
+        safeEq = [variable, 0]
+        safeKB = copy.deepcopy(KB)
+        safeKB = addEq(safeKB, safeEq)
+        safeConfigIsValid = configIsValid(safeKB)
+        if len(variables) == 1 and safeConfigIsValid:
+            validConfigs += 1
+            for mineVar in simulatedMineVariables:
+                mineCounts[mineVar] += 1
+        elif safeConfigIsValid:
+            validConfigs += findValidConfigs(
+                safeKB, variables[1:], simulatedMineVariables.copy(), mineCounts)
+        mineEq = [variable, 1]
+        mineKB = copy.deepcopy(KB)
+        mineKB = addEq(mineKB, mineEq)
+        simulatedMineVariables.append(variable)
+        mineConfigIsValid = configIsValid(mineKB)
+        if len(variables) == 1 and mineConfigIsValid:
+            validConfigs += 1
+            for mineVar in simulatedMineVariables:
+                mineCounts[mineVar] += 1
+        elif mineConfigIsValid:
+            validConfigs += findValidConfigs(
+                mineKB, variables[1:], simulatedMineVariables.copy(), mineCounts)
 
     return validConfigs
+
+
+def findExistingAssignment(KB, variable):
+    for eq in KB:
+        if len(eq) == 2 and eq[0] == variable:
+            return eq[1]
+    return None
 
 
 def configIsValid(KB):
@@ -168,24 +201,6 @@ def configIsValid(KB):
         if len(eq) - 1 < eq[-1] or eq[-1] < 0:
             return False
     return True
-
-
-def checkForInference(KB, agent, safeSet, mineSet):
-    madeInference = False
-    for eq in KB:
-        if (len(eq) - 1 == eq[-1]):
-            for var in eq[0: len(eq) - 1]:
-                (r, c) = indexToTuple(var, agent.dim)
-                if not (agent.hasExplored((r, c)) or (r, c) in mineSet):
-                    mineSet.add((r, c))
-                    madeInference = True
-        elif (eq[-1] == 0):
-            for var in eq[0: len(eq) - 1]:
-                (r, c) = indexToTuple(var, agent.dim)
-                if not (agent.hasExplored((r, c)) or (r, c) in safeSet):
-                    safeSet.add((r, c))
-                    madeInference = True
-    return(KB, madeInference)
 
 
 def display(dim, agent):
@@ -213,18 +228,10 @@ def display(dim, agent):
     print("Identified Mines/Total Mines: " +
           str(numIdentifiedMines / int(agent.dim**2 * 0.4)))
     print("total mines:", str(numTripped + numIdentifiedMines + numRevealed))
-    print(findRepeats(agent.revealedCoords))
-
-
-def findRepeats(array):
-    retlist = []
-    for i in range(0, len(array)):
-        if array[i] in array[i + 1:]:
-            retlist.append(array[i])
-    return retlist
 
 
 dim = 10
+
 gb = Board(dim)
 gb.set_mines(int(dim**2 * 0.4))
 
