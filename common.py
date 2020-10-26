@@ -85,6 +85,7 @@ class Agent:
         for preferredCoords in self.preferredCoords:
             if not self.hasExplored(preferredCoords):
                 r, c = preferredCoords
+                break
         if r == -1 and c == -1:
             r, c = self.chooseRandomCoords()
         return r, c

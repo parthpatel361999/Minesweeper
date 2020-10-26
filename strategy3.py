@@ -14,7 +14,7 @@ def strategy3(gboard, dim, agent):
     themselves). Also declare a set for the unknown variables in the knowledge base.
     """
     KB = []
-    variables = set()
+    variables = []
 
     """
     If there are preferred coordinates for the agent to choose from, choose the first of those. Else,
@@ -27,13 +27,13 @@ def strategy3(gboard, dim, agent):
         Check the current cell. Based on the type of the mine, add the respective equations and variables.
         """
 
-        # print(r, c, "or", tupleToIndex(r, c, dim))
+        print(r, c, "or", tupleToIndex(r, c, dim))
         currentCell = agent.checkCell((r, c), gboard)
         if currentCell.type == Cell.MINE:
             KB = addMineEq(KB, currentCell, dim)
         else:
             KB = addSafeEq(KB, currentCell, dim, agent, variables)
-        print("variables:", str(len(variables)))
+        print("variables:", str(len(variables)), variables)
 
         """
         If there are no unknown variables in the knowledge base, choose one of the preferred coordinates.
@@ -56,37 +56,37 @@ def strategy3(gboard, dim, agent):
             coordinates as the next to be explored; else, choose from the preferred coordinates (or
             random coordinates, if necessary).
             """
-            safeVariables, mineVariables, safestVariable = calculateVariableProbabilities(
-                KB, list(variables))
+            safeVariables, mineVariables = calculateVariableProbabilities(
+                KB, variables)
             while len(safeVariables) > 0 or len(mineVariables) > 0:
                 for variable in safeVariables:
-                    variables.remove(variable)
+                    if variable in variables:
+                        variables.remove(variable)
                     coords = indexToTuple(variable, dim)
                     safeCell = agent.checkCell(coords, gboard)
                     KB = addSafeEq(KB, safeCell, dim, agent, variables)
                 for variable in mineVariables:
-                    variables.remove(variable)
+                    if variable in variables:
+                        variables.remove(variable)
                     coords = indexToTuple(variable, dim)
                     mineCell = agent.identifyMine(coords)
                     KB = addMineEq(KB, mineCell, dim)
-                safeVariables, mineVariables, safestVariable = calculateVariableProbabilities(
-                    KB, list(variables))
+                safeVariables, mineVariables = calculateVariableProbabilities(
+                    KB, variables)
 
-            if safestVariable is not None:
-                r, c = indexToTuple(safestVariable, dim)
-                variables.remove(safestVariable)
+            if len(variables) > 0:
+                r, c = indexToTuple(variables[0], dim)
+                variables.remove(variables[0])
             elif not agent.isFinished():
                 r, c = agent.choosePreferredOrRandomCoords()
 
 
-def addSafeEq(KB, cell, dim, agent, variables=None):
+def addSafeEq(KB, cell, dim, agent, variables):
     """
     Add an equation identifying the cell's coordinates as safe to the knowledge base. Then, create a clue 
     equation for all of the cell's neighbors, and add those neighbors to the unknown variables list if
     they haven't been explored by the agent already.
     """
-    if variables is None:
-        variables = set()
     r, c = cell.coords
     safeEq = [tupleToIndex(r, c, dim), 0]
     KB = addEq(KB, safeEq)
@@ -95,8 +95,8 @@ def addSafeEq(KB, cell, dim, agent, variables=None):
         nRow, nCol = neighbor
         neighborIndex = tupleToIndex(nRow, nCol, dim)
         clueEq.append(neighborIndex)
-        if not agent.hasExplored(neighbor):
-            variables.add(neighborIndex)
+        if not agent.hasExplored(neighbor) and neighborIndex not in variables:
+            variables.append(neighborIndex)
     clueEq.append(cell.type)
     KB = addEq(KB, clueEq)
     return KB
@@ -119,8 +119,7 @@ def calculateVariableProbabilities(KB, variables):
     validConfigurations = findValidConfigs(KB, variables, [],  mineCounts)
     safeVariables = []
     mineVariables = []
-    minMineProb = 1.0
-    safestVariable = None
+    variableProbabilities = []
     for variable in mineCounts:
         if mineCounts[variable] == 0:
             safeVariables.append(variable)
@@ -128,17 +127,20 @@ def calculateVariableProbabilities(KB, variables):
             mineVariables.append(variable)
         else:
             mineProb = mineCounts[variable] / validConfigurations
-            if mineProb < minMineProb:
-                safestVariable = variable
-                minMineProb = mineProb
-    return safeVariables, mineVariables, safestVariable
+            variableProbabilities.append((mineProb, variable))
+    variableProbabilities.sort()
+    variables.clear()
+    for probVar in variableProbabilities:
+        probability, variable = probVar
+        variables.append(variable)
+    return safeVariables, mineVariables
 
 
 def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
-    validConfigs = 0
-
     if len(variables) < 1:
-        return validConfigs
+        return 0
+
+    validConfigs = 0
 
     variable = variables[0]
     existingAssignment = findExistingAssignment(KB, variable)
@@ -228,6 +230,15 @@ def display(dim, agent):
     print("Identified Mines/Total Mines: " +
           str(numIdentifiedMines / int(agent.dim**2 * 0.4)))
     print("total mines:", str(numTripped + numIdentifiedMines + numRevealed))
+    print(findRepeats(agent.revealedCoords))
+
+
+def findRepeats(array):
+    retlist = []
+    for i in range(0, len(array)):
+        if array[i] in array[i + 1:]:
+            retlist.append(array[i])
+    return retlist
 
 
 dim = 10
