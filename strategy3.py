@@ -97,7 +97,7 @@ def addSafeEq(KB, cell, dim, agent, variables):
         neighborIndex = tupleToIndex(nRow, nCol, dim)
         clueEq.append(neighborIndex)
         if not agent.hasExplored(neighbor) and neighborIndex not in variables:
-            variables.insert(0, neighborIndex)
+            variables.append(neighborIndex)
     clueEq.append(cell.type)
     addEq(KB, clueEq)
 
@@ -115,7 +115,7 @@ def calculateVariableProbabilities(KB, variables):
     mineCounts = {}
     for variable in variables:
         mineCounts[variable] = 0
-    validConfigurations = findValidConfigs(KB, variables, [],  mineCounts)
+    validConfigurations = findValidConfigs(KB, variables, set(),  mineCounts)
     safeVariables = []
     mineVariables = []
     variableProbabilities = []
@@ -154,7 +154,7 @@ def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
                 validConfigs += findValidConfigs(
                     KB, variables[1:], simulatedMineVariables.copy(), mineCounts)
         elif existingAssignment == 1:
-            simulatedMineVariables.append(variable)
+            simulatedMineVariables.add(variable)
             if len(variables) == 1:
                 validConfigs += 1
                 for mineVar in simulatedMineVariables:
@@ -177,7 +177,7 @@ def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
         mineEq = [variable, 1]
         mineKB = copy.deepcopy(KB)
         addEq(mineKB, mineEq)
-        simulatedMineVariables.append(variable)
+        simulatedMineVariables.add(variable)
         mineConfigIsValid = configIsValid(mineKB)
         if len(variables) == 1 and mineConfigIsValid:
             validConfigs += 1
@@ -240,7 +240,7 @@ def display(dim, agent):
 #     return retlist
 
 
-dim = 11
+dim = 50
 
 gb = Board(dim)
 gb.set_mines(int(dim**2 * 0.4))
