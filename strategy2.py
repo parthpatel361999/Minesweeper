@@ -2,6 +2,7 @@ from Agent import Agent,Cell
 from Board import Board, findNeighboringCoords
 import random as rnd
 import numpy as np
+import time
 
 #TODO resolve KB inefficiency
 #Line 80 check order
@@ -39,8 +40,8 @@ def strategy2(gboard, dim, agent):
             (r, c) = inferredSafeSet.pop()
         
 def addEq(KB, equation): #add an equation to the KB
-    equation = reduceEq(KB, equation) #reduce the new equation by every equation in the KB
-    if(equation == []): #if the equation is already contained in the KB or gets reduced to nothing, skip
+    reduceEq(KB, equation) #reduce the new equation by every equation in the KB
+    if(len(equation) < 2): #if the equation is already contained in the KB or gets reduced to nothing, skip
         return KB
     reduceKB(KB, equation) #reduce every equation in the KB by reduced new equation
     KB.append(equation) #insert the new equation into the KB
@@ -79,20 +80,18 @@ def reduceKB(KB, newEq):
                 KB[i] = []
     while([] in KB):
         KB.remove([])
-    if(modified != []):
-        for eq in modified: #potentially optimize by checking if eq still in KB
-            reduceKB(KB, eq)
+    for E in modified:
+        reduceKB(KB, E)
 
 def reduceEq(KB, newEq):
     for eq in KB: #for every equation eq in the KB, reduce the new equation by eq
         if (set(eq[0 : len(eq) - 1]).issubset(set(newEq[0 : len(newEq) - 1]))): #if eq is a subset of the new equation
+            newEqLength = len(newEq)
             constraintDifference = newEq[len(newEq) - 1] - eq[len(eq) - 1] #store the difference of the constraint values
-            newEq = list(set(newEq[0 : len(newEq) - 1]) - set(eq[0 : len(eq) - 1])) #find the set difference
+            newEq.extend(list(set(newEq[0 : len(newEq) - 1]) - set(eq[0 : len(eq) - 1]))) #find the set difference
             newEq.append(constraintDifference) #append the constaint difference to the end of the equation
-    if (len(newEq) < 2):
-        return []
-    else:
-        return newEq
+            for _ in range(newEqLength):
+                newEq.remove(newEq[0])
 
 def tupleToIndex(r, c, dim):
     return dim * r + c #converts cell tuples to unique integers
@@ -124,7 +123,7 @@ def display(dim,agent):
     print("Revealed Cells: " + str(numRevealed))
     print("Identified Mines/Total Mines: " + str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
 
-dim = 30
+dim = 50
 gb = Board(dim)
 #gb.set_mines(40)
 gb.set_mines(dim**2 * 0.4)
@@ -132,5 +131,8 @@ gb.set_mines(dim**2 * 0.4)
 print(gb.board)
 
 ag = Agent(dim)
+startTime = time.time()
 strategy2(gb,dim,ag)
+endTime = time.time()
 display(dim,ag)
+print("Time taken: " + str(endTime - startTime))
