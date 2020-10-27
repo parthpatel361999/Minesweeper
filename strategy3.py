@@ -1,6 +1,7 @@
 import copy
 import itertools
 import random as rnd
+import time
 from collections import deque
 
 from common import Agent, Board, Cell
@@ -27,12 +28,12 @@ def strategy3(gboard, dim, agent):
         Check the current cell. Based on the type of the mine, add the respective equations and variables.
         """
 
-        print(r, c, "or", tupleToIndex(r, c, dim))
+        # print(r, c, "or", tupleToIndex(r, c, dim))
         currentCell = agent.checkCell((r, c), gboard)
         if currentCell.type == Cell.MINE:
-            KB = addMineEq(KB, currentCell, dim)
+            addMineEq(KB, currentCell, dim)
         else:
-            KB = addSafeEq(KB, currentCell, dim, agent, variables)
+            addSafeEq(KB, currentCell, dim, agent, variables)
         print("variables:", str(len(variables)), variables)
 
         """
@@ -45,7 +46,6 @@ def strategy3(gboard, dim, agent):
         if agent.isFinished() and len(variables) == 0:
             break
         elif len(variables) == 0:
-            # print("random choice")
             r, c = agent.choosePreferredOrRandomCoords()
         else:
             """
@@ -64,15 +64,16 @@ def strategy3(gboard, dim, agent):
                         variables.remove(variable)
                     coords = indexToTuple(variable, dim)
                     safeCell = agent.checkCell(coords, gboard)
-                    KB = addSafeEq(KB, safeCell, dim, agent, variables)
+                    addSafeEq(KB, safeCell, dim, agent, variables)
                 for variable in mineVariables:
                     if variable in variables:
                         variables.remove(variable)
                     coords = indexToTuple(variable, dim)
                     mineCell = agent.identifyMine(coords)
-                    KB = addMineEq(KB, mineCell, dim)
+                    addMineEq(KB, mineCell, dim)
                 safeVariables, mineVariables = calculateVariableProbabilities(
                     KB, variables)
+                print("inner variables:", str(len(variables)), variables)
 
             if len(variables) > 0:
                 r, c = indexToTuple(variables[0], dim)
@@ -89,17 +90,16 @@ def addSafeEq(KB, cell, dim, agent, variables):
     """
     r, c = cell.coords
     safeEq = [tupleToIndex(r, c, dim), 0]
-    KB = addEq(KB, safeEq)
+    addEq(KB, safeEq)
     clueEq = []
     for neighbor in cell.neighbors:
         nRow, nCol = neighbor
         neighborIndex = tupleToIndex(nRow, nCol, dim)
         clueEq.append(neighborIndex)
         if not agent.hasExplored(neighbor) and neighborIndex not in variables:
-            variables.append(neighborIndex)
+            variables.insert(0, neighborIndex)
     clueEq.append(cell.type)
-    KB = addEq(KB, clueEq)
-    return KB
+    addEq(KB, clueEq)
 
 
 def addMineEq(KB, cell, dim):
@@ -108,8 +108,7 @@ def addMineEq(KB, cell, dim):
     """
     r, c = cell.coords
     mineEq = [tupleToIndex(r, c, dim), 1]
-    KB = addEq(KB, mineEq)
-    return KB
+    addEq(KB, mineEq)
 
 
 def calculateVariableProbabilities(KB, variables):
@@ -166,7 +165,7 @@ def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
     else:
         safeEq = [variable, 0]
         safeKB = copy.deepcopy(KB)
-        safeKB = addEq(safeKB, safeEq)
+        addEq(safeKB, safeEq)
         safeConfigIsValid = configIsValid(safeKB)
         if len(variables) == 1 and safeConfigIsValid:
             validConfigs += 1
@@ -177,7 +176,7 @@ def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
                 safeKB, variables[1:], simulatedMineVariables.copy(), mineCounts)
         mineEq = [variable, 1]
         mineKB = copy.deepcopy(KB)
-        mineKB = addEq(mineKB, mineEq)
+        addEq(mineKB, mineEq)
         simulatedMineVariables.append(variable)
         mineConfigIsValid = configIsValid(mineKB)
         if len(variables) == 1 and mineConfigIsValid:
@@ -230,18 +229,18 @@ def display(dim, agent):
     print("Identified Mines/Total Mines: " +
           str(numIdentifiedMines / int(agent.dim**2 * 0.4)))
     print("total mines:", str(numTripped + numIdentifiedMines + numRevealed))
-    print(findRepeats(agent.revealedCoords))
+    # print(findRepeats(agent.revealedCoords))
 
 
-def findRepeats(array):
-    retlist = []
-    for i in range(0, len(array)):
-        if array[i] in array[i + 1:]:
-            retlist.append(array[i])
-    return retlist
+# def findRepeats(array):
+#     retlist = []
+#     for i in range(0, len(array)):
+#         if array[i] in array[i + 1:]:
+#             retlist.append(array[i])
+#     return retlist
 
 
-dim = 10
+dim = 11
 
 gb = Board(dim)
 gb.set_mines(int(dim**2 * 0.4))
@@ -250,6 +249,7 @@ print("Strat 3")
 print(gb.board)
 corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
 ag = Agent(dim=dim, preferredCoords=corners)
+startTime = time.time()
 strategy3(gb, dim, ag)
 
 print("Display")
@@ -257,3 +257,4 @@ print(ag.revealedCoords)
 print(ag.identifiedMineCoords)
 print(gb.board)
 display(dim, ag)
+print("Time:", time.time() - startTime, "seconds")
