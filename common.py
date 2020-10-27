@@ -25,6 +25,23 @@ class Board:
                     if self.board[nrow][ncol] != Cell.MINE:
                         self.board[nrow, ncol] += 1
                 count += 1
+    
+    def set_specific_mines(self, num_mines, locations):
+        count = 0
+        self.num_mines = num_mines
+        while count < num_mines:
+            pos = rnd.randint(0, self.dim*self.dim-1)
+            row = pos // self.dim
+            col = pos % self.dim
+            if self.board[row][col] != Cell.MINE:
+                self.board[row][col] = Cell.MINE
+                # update neighbors here
+                neighbors = findNeighboringCoords((row, col), self.dim)
+                for n in neighbors:
+                    nrow, ncol = n
+                    if self.board[nrow][ncol] != Cell.MINE:
+                        self.board[nrow, ncol] += 1
+                count += 1
 
     def isSolved(self, num_discovered):
         return num_discovered == self.num_mines

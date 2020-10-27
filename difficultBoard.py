@@ -1,8 +1,10 @@
 from common import Agent, Cell, Board, findNeighboringCoords
 from commonCSP import *
+import random as rnd
+import operator as op
+from functools import reduce
 import time
 import copy
-import random as rnd
 
 def strategy2(gboard, dim, agent):
     KB = []
@@ -60,22 +62,19 @@ def display(dim,agent):
     print("Revealed Cells: " + str(numRevealed))
     print("Identified Mines/Total Mines: " + str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
 
-# dim = 10
-# gb = Board(dim)
-# gb.set_mines(dim**2 * 0.4)
-# print(gb.board)
-# ag = Agent(dim)
-# startTime = time.time()
-# strategy2(gb,dim,ag)
-# endTime = time.time()
-# display(dim,ag)
+def ncr(n, r):
+    r = min(r, n-r)
+    numer = reduce(op.mul, range(n, n-r, -1), 1)
+    denom = reduce(op.mul, range(1, r+1), 1)
+    return numer // denom
 
 dim = 4
 numBoards = 100
-numTrials = 100
+numTrials = 30
 worstBoard = []
 worstRate = 1
-for _ in range(numBoards):
+boardSet = []
+for i in range(500):
     godBoard = Board(dim)
     godBoard.set_mines(dim**2 * 0.4)
     avgDetectionRate = 0
@@ -88,6 +87,7 @@ for _ in range(numBoards):
     if(avgDetectionRate < worstRate):
         worstBoard = copy.deepcopy(godBoard.board) #check if neccessary to deepcopy here
         worstRate = avgDetectionRate
+    print(i)
 
 print(worstBoard)
 print(worstRate)
