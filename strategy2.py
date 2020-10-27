@@ -1,11 +1,7 @@
-from Agent import Agent,Cell 
-from Board import Board, findNeighboringCoords
+from common import Agent, Cell, Board, findNeighboringCoords
 import random as rnd
 import numpy as np
 import time
-
-#TODO resolve KB inefficiency
-#Line 80 check order
 
 def strategy2(gboard, dim, agent):
     KB = []
@@ -123,13 +119,10 @@ def display(dim,agent):
     print("Revealed Cells: " + str(numRevealed))
     print("Identified Mines/Total Mines: " + str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
 
-dim = 50
+dim = 3
 gb = Board(dim)
-#gb.set_mines(40)
 gb.set_mines(dim**2 * 0.4)
-
 print(gb.board)
-
 ag = Agent(dim)
 startTime = time.time()
 strategy2(gb,dim,ag)
