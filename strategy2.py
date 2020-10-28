@@ -69,9 +69,11 @@ def checkForInference(KB, agent, safeSet):
 def reduceKB(KB, newEq):
     modified = []
     for i in range(len(KB)):
-        if (KB[i] != newEq and set(newEq[0 : len(newEq) - 1]).issubset(set(KB[i][0 : len(KB[i]) - 1]))): #if newEq is a subset of an equation in KB
-            constraintDifference = KB[i][len(KB[i]) - 1] - newEq[len(newEq) - 1] #store the difference of the constraint values
-            e = list(set(KB[i][0 : len(KB[i]) - 1]) - set(newEq[0 : len(newEq) - 1])) #find the set difference
+        newEqLen = len(newEq)
+        KBEqLen = len(KB[i])
+        if (newEqLen <= KBEqLen and KB[i] != newEq and set(newEq[0 : newEqLen - 1]).issubset(set(KB[i][0 : KBEqLen - 1]))): #if newEq is a subset of an equation in KB
+            constraintDifference = KB[i][KBEqLen - 1] - newEq[newEqLen - 1] #store the difference of the constraint values
+            e = list(set(KB[i][0 : KBEqLen - 1]) - set(newEq[0 : newEqLen - 1])) #find the set difference
             e.append(constraintDifference) #append the constaint difference to the end of the equation
             if(e not in KB):
                 KB[i] = e
@@ -85,12 +87,14 @@ def reduceKB(KB, newEq):
 
 def reduceEq(KB, newEq):
     for eq in KB: #for every equation eq in the KB, reduce the new equation by eq
-        if (set(eq[0 : len(eq) - 1]).issubset(set(newEq[0 : len(newEq) - 1]))): #if eq is a subset of the new equation
-            newEqLength = len(newEq)
-            constraintDifference = newEq[len(newEq) - 1] - eq[len(eq) - 1] #store the difference of the constraint values
-            newEq.extend(list(set(newEq[0 : len(newEq) - 1]) - set(eq[0 : len(eq) - 1]))) #find the set difference
+        eqLen = len(eq)
+        newEqLen = len(newEq)
+        if (eqLen <= newEqLen and set(eq[0 : eqLen - 1]).issubset(set(newEq[0 : newEqLen - 1]))): #if eq is a subset of the new equation
+            #newEqLength = len(newEq)
+            constraintDifference = newEq[newEqLen - 1] - eq[eqLen - 1] #store the difference of the constraint values
+            newEq.extend(list(set(newEq[0 : newEqLen - 1]) - set(eq[0 : eqLen - 1]))) #find the set difference
             newEq.append(constraintDifference) #append the constaint difference to the end of the equation
-            for _ in range(newEqLength):
+            for _ in range(newEqLen):
                 newEq.remove(newEq[0])
 
 def tupleToIndex(r, c, dim):
@@ -123,7 +127,7 @@ def display(dim,agent):
     print("Revealed Cells: " + str(numRevealed))
     print("Identified Mines/Total Mines: " + str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
 
-dim = 50
+dim = 30
 gb = Board(dim)
 #gb.set_mines(40)
 gb.set_mines(dim**2 * 0.4)
