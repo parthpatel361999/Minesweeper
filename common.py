@@ -155,9 +155,11 @@ def display(dim, agent):
                 numRevealed += 1
             else:
                 continue
-    print(display.board)
-    print("Tripped Mines: " + str(numTripped))
-    print("Identified Mines: " + str(numIdentifiedMines))
-    print("Revealed Cells: " + str(numRevealed))
-    print("Identified Mines/Total Mines: " +
-          str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
+
+    return float(numIdentifiedMines) / float(numTripped + numIdentifiedMines)
+    # print(display.board)
+    # print("Tripped Mines: " + str(numTripped))
+    # print("Identified Mines: " + str(numIdentifiedMines))
+    # print("Revealed Cells: " + str(numRevealed))
+    # print("Identified Mines/Total Mines: " +
+    #       str(numIdentifiedMines / (numTripped + numIdentifiedMines)))

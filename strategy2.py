@@ -1,5 +1,5 @@
-from Agent import Agent,Cell 
-from Board import Board, findNeighboringCoords
+from common import Agent,Cell 
+from common import Board, findNeighboringCoords
 import random as rnd
 import numpy as np
 
@@ -122,17 +122,17 @@ def display(dim,agent):
                 numRevealed += 1
             else:
                 continue
-    print(display.board)
-    print("Tripped Mines: " + str(numTripped))
-    print("Identified Mines: " + str(numIdentifiedMines))
-    print("Revealed Cells: " + str(numRevealed))
-    print("Identified Mines/Total Mines: " + str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
+    # print(display.board)
+    # print("Tripped Mines: " + str(numTripped))
+    # print("Identified Mines: " + str(numIdentifiedMines))
+    # print("Revealed Cells: " + str(numRevealed))
+    # print("Identified Mines/Total Mines: " + str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
 
 dim = 20
 gb = Board(dim)
 gb.set_mines(160)
 
-print(gb.board)
+#print(gb.board)
 
 ag = Agent(dim)
 strategy2(gb,dim,ag)
