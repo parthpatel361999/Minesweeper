@@ -115,7 +115,7 @@ def calculateVariableProbabilities(KB, variables):
     for variable in variables:
         mineCounts[variable] = 0
     validConfigurations = findValidConfigs(
-        deepcopy(KB), variables.copy(), set(),  mineCounts)
+        copyKB(KB), variables.copy(), set(),  mineCounts)
     safeVariables = []
     mineVariables = []
     variableProbabilities = []
@@ -128,23 +128,30 @@ def calculateVariableProbabilities(KB, variables):
             mineProb = mineCounts[variable] / validConfigurations
             variableProbabilities.append((mineProb, variable))
     variables.clear()
-    variableProbabilities.sort()
+    # variableProbabilities.sort()
+    # for probVar in variableProbabilities:
+    #     probability, variable = probVar
+    #     variables.append(variable)
     for probVar in variableProbabilities:
         probability, variable = probVar
-        variables.append(variable)
-    # for probVar in variableProbabilities:
-    #     probability, variable = probVar
-    #     if probability <= 1/3:
-    #         variables.append(variable)
-    # for probVar in reversed(variableProbabilities):
-    #     probability, variable = probVar
-    #     if probability >= 2/3:
-    #         variables.append(variable)
-    # for probVar in variableProbabilities:
-    #     probability, variable = probVar
-    #     if probability > 1/3 and probability < 2/3:
-    #         variables.append(variable)
+        if probability <= .3:
+            variables.append(variable)
+    for probVar in reversed(variableProbabilities):
+        probability, variable = probVar
+        if probability >= .7:
+            variables.append(variable)
+    for probVar in variableProbabilities:
+        probability, variable = probVar
+        if probability > .3 and probability < .7:
+            variables.append(variable)
     return safeVariables, mineVariables
+
+
+def copyKB(KB):
+    newKB = []
+    for eq in KB:
+        newKB.append(eq.copy())
+    return newKB
 
 
 def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
@@ -165,27 +172,28 @@ def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
     else:
         variable = variables[0]
         safeEq = [variable, 0]
-        copiedKB = deepcopy(KB)
-        addEq(copiedKB, safeEq)
-        safeConfigIsValid = configIsValid(copiedKB)
+        safeKB = copyKB(KB)
+        addEq(safeKB, safeEq)
+        safeConfigIsValid = configIsValid(safeKB)
         if len(variables) == 1 and safeConfigIsValid:
             validConfigs += 1
             for mineVar in simulatedMineVariables:
                 mineCounts[mineVar] += 1
         elif safeConfigIsValid:
             validConfigs += findValidConfigs(
-                copiedKB, variables[1:], simulatedMineVariables.copy(), mineCounts)
+                safeKB, variables[1:], simulatedMineVariables.copy(), mineCounts)
         mineEq = [variable, 1]
-        addEq(KB, mineEq)
+        mineKB = copyKB(KB)
+        addEq(mineKB, mineEq)
         simulatedMineVariables.add(variable)
-        mineConfigIsValid = configIsValid(KB)
+        mineConfigIsValid = configIsValid(mineKB)
         if len(variables) == 1 and mineConfigIsValid:
             validConfigs += 1
             for mineVar in simulatedMineVariables:
                 mineCounts[mineVar] += 1
         elif mineConfigIsValid:
             validConfigs += findValidConfigs(
-                KB, variables[1:], simulatedMineVariables.copy(), mineCounts)
+                mineKB, variables[1:], simulatedMineVariables.copy(), mineCounts)
 
     return validConfigs
 
