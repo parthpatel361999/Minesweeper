@@ -26,13 +26,10 @@ class Board:
                         self.board[nrow, ncol] += 1
                 count += 1
     
-    def set_specific_mines(self, num_mines, locations):
+    def set_specific_mines(self, locations):
         count = 0
-        self.num_mines = num_mines
-        while count < num_mines:
-            pos = rnd.randint(0, self.dim*self.dim-1)
-            row = pos // self.dim
-            col = pos % self.dim
+        self.num_mines = len(locations)
+        for (row, col) in locations:
             if self.board[row][col] != Cell.MINE:
                 self.board[row][col] = Cell.MINE
                 # update neighbors here

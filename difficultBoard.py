@@ -68,17 +68,50 @@ def ncr(n, r):
     denom = reduce(op.mul, range(1, r+1), 1)
     return numer // denom
 
-dim = 4
+def totalEuclid(board):
+    mines = []
+    for i in range(len(board)):
+        for j in range(len(board[i])):
+            if board[i][j] == -1:
+                mines.append((i, j))
+    total = 0
+    for i in range(len(mines)):
+        for j in range(i + 1, len(mines)):
+            (r1, c1) = mines[i]
+            (r2, c2) = mines[j]
+            total = total + ((r1-r2)**2 + (c1-c2)**2)**0.5
+    return total
+
+def localSearch(dim, numMines, numRestarts):
+    worstDetectionRate = 1
+    worstBoard = []
+    numTrials = 20
+    for _ in range(numRestarts):
+        godBoard = Board(dim)
+        godBoard.set_mines(dim**2 * 0.4) #check for unique config
+        for _ in range(numTrials):
+            agent = Agent(dim)
+            strategy2(godBoard, dim, agent)
+            avgDetectionRate = avgDetectionRate + len(agent.identifiedMineCoords) / (len(agent.identifiedMineCoords) + len(agent.trippedMineCoords))
+        avgDetectionRate = avgDetectionRate / numTrials
+        if(avgDetectionRate < worstDetectionRate):
+            worstBoard = copy.deepcopy(godBoard.board) #check if neccessary to deepcopy here
+            worstDetectionRate = avgDetectionRate
+
+#created set_specific_mines()
+#created totalEuclid()
+
+"""Brute Force checker
+dim = 3
 numBoards = 100
 numTrials = 30
 worstBoard = []
 worstRate = 1
 boardSet = []
-for i in range(500):
+for i in range(numBoards):
     godBoard = Board(dim)
     godBoard.set_mines(dim**2 * 0.4)
     avgDetectionRate = 0
-
     for _ in range(numTrials):
         agent = Agent(dim)
         strategy2(godBoard, dim, agent)
@@ -87,7 +120,7 @@ for i in range(500):
     if(avgDetectionRate < worstRate):
         worstBoard = copy.deepcopy(godBoard.board) #check if neccessary to deepcopy here
         worstRate = avgDetectionRate
-    print(i)
-
 print(worstBoard)
 print(worstRate)
+"""
+print(totalEuclid(worstBoard))
