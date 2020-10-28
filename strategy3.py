@@ -265,7 +265,7 @@ def display(dim, agent):
 #     return retlist
 
 
-dim = 20
+dim = 15
 
 gb = Board(dim)
 gb.set_mines(int(dim**2 * 0.4))
