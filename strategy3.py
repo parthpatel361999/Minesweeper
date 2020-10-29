@@ -1,7 +1,5 @@
 import random as rnd
 import time
-from collections import deque
-from copy import deepcopy
 
 from common import Agent, Board, Cell
 from commonCSP import addEq, indexToTuple, tupleToIndex
@@ -55,6 +53,7 @@ def strategy3(gboard, dim, agent):
             coordinates as the next to be explored; else, choose from the preferred coordinates (or
             random coordinates, if necessary).
             """
+            KB = thinKB(KB, set(variables), agent)
             safeVariables, mineVariables = calculateVariableProbabilities(
                 KB, variables)
             while len(safeVariables) > 0 or len(mineVariables) > 0:
@@ -70,6 +69,7 @@ def strategy3(gboard, dim, agent):
                     coords = indexToTuple(variable, dim)
                     mineCell = agent.identifyMine(coords)
                     addMineEq(KB, mineCell, dim)
+                KB = thinKB(KB, set(variables), agent)
                 safeVariables, mineVariables = calculateVariableProbabilities(
                     KB, variables)
                 print("inner variables:", str(len(variables)), variables)
@@ -79,6 +79,25 @@ def strategy3(gboard, dim, agent):
                 variables.remove(variables[0])
             elif not agent.isFinished():
                 r, c = agent.choosePreferredOrRandomCoords()
+
+
+def thinKB(KB, variables, agent):
+    thinnedKB = []
+    for eq in KB:
+        if len(eq) == 2:
+            r, c = indexToTuple(eq[0], agent.dim)
+            neighbors = agent.board[r][c].neighbors
+            infoExhausted = True
+            for neighbor in neighbors:
+                nr, nc = neighbor
+                if tupleToIndex(nr, nc, agent.dim) in variables:
+                    infoExhausted = False
+                    break
+            if not infoExhausted:
+                thinnedKB.append(eq)
+        else:
+            thinnedKB.append(eq)
+    return thinnedKB
 
 
 def addSafeEq(KB, cell, dim, agent, variables):
@@ -265,7 +284,7 @@ def display(dim, agent):
 #     return retlist
 
 
-dim = 15
+dim = 20
 
 gb = Board(dim)
 gb.set_mines(int(dim**2 * 0.4))
@@ -282,4 +301,6 @@ print(ag.revealedCoords)
 print(ag.identifiedMineCoords)
 print(gb.board)
 display(dim, ag)
-print("Time:", time.time() - startTime, "seconds")
+endTime = time.time()
+print("Time:", endTime - startTime,
+      "seconds (" + str((endTime - startTime)/60), "min)")
