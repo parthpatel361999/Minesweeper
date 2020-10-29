@@ -9,12 +9,12 @@ def testStrategy():
     plotDict = {}
 
     biglist = []
-    while dim <= 50:
+    while dim <= 50: #change to 50
         print('dim= ', dim)
         averages = []
         for m in mineDensity:
             successRate = []
-            for i in range(1):
+            for i in range(30): #change to 30
                 gb = Board(dim)
                 gb.set_mines((dim**2)*m)
                 corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
@@ -29,15 +29,30 @@ def testStrategy():
         biglist.append(averages)
         dim += 10
 
-    f, ax = plt.subplots(2,1)
-    dim = 10
-    for i in range(0, 5):
-        ax[i].plot(mineDensity, biglist[i])
-        ax[i].set_title('Board with Dimension {}'.format(dim))
-        ax[i].xlabel('Mine Density')
-        ax[i].ylabel('Average Final Score')
+    dim = 10 
+    for i in range(0,5): # change to 5
+        plt.figure(figsize=(12,12))
+        plt.scatter(mineDensity,biglist[i],c='#1f77b4', s=10)
+        for j in range(len(mineDensity)):
+            plt.text(mineDensity[j], biglist[i][j], '('+'%.1f' % mineDensity[j]+', '+'%.3f'%biglist[i][j]+')', size='x-small', in_layout=True, snap=True)
+            #plt.annotate(text='('+'%.1f' % mineDensity[j]+', '+'%.3f'%biglist[i][j]+')', xy=(mineDensity[j], biglist[i][j]))
+        plt.plot(mineDensity, biglist[i])
+        plt.title('Board with Dimension {}'.format(dim))
+        plt.xlabel('Mine Density')
+        plt.ylabel('Average Final Score')
+        plt.savefig('Dimension {}.png'.format(dim))
         dim += 10
-    f.show()
+
+    # f, ax = plt.subplots(5,1, figsize=(15,15))
+    # dim = 10
+    # for i in range(0, 5):
+    #     ax[i].plot(mineDensity, biglist[i])
+    #     ax[i].set_title('Board with Dimension {}'.format(dim))
+    #     ax[i].set_xlabel('Mine Density')
+    #     ax[i].set_ylabel('Average Final Score')
+    #     dim += 10
+    # f.savefig('test.png', bbox_inches="tight")
+    # f.show()
     print(biglist)
 testStrategy()
     
