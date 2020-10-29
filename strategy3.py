@@ -1,5 +1,6 @@
 import random as rnd
 import time
+from itertools import product
 
 from common import Agent, Board, Cell
 from commonCSP import addEq, indexToTuple, tupleToIndex
@@ -130,11 +131,12 @@ def addMineEq(KB, cell, dim):
 
 
 def calculateVariableProbabilities(KB, variables):
+    print("KB size:", str(len(KB)))
     mineCounts = {}
     for variable in variables:
         mineCounts[variable] = 0
     validConfigurations = findValidConfigs(
-        copyKB(KB), variables.copy(), set(),  mineCounts)
+        KB, variables, set(), mineCounts)
     safeVariables = []
     mineVariables = []
     variableProbabilities = []
@@ -147,22 +149,22 @@ def calculateVariableProbabilities(KB, variables):
             mineProb = mineCounts[variable] / validConfigurations
             variableProbabilities.append((mineProb, variable))
     variables.clear()
-    # variableProbabilities.sort()
+    variableProbabilities.sort()
+    for probVar in variableProbabilities:
+        probability, variable = probVar
+        variables.append(variable)
     # for probVar in variableProbabilities:
     #     probability, variable = probVar
-    #     variables.append(variable)
-    for probVar in variableProbabilities:
-        probability, variable = probVar
-        if probability <= .3:
-            variables.append(variable)
-    for probVar in reversed(variableProbabilities):
-        probability, variable = probVar
-        if probability >= .7:
-            variables.append(variable)
-    for probVar in variableProbabilities:
-        probability, variable = probVar
-        if probability > .3 and probability < .7:
-            variables.append(variable)
+    #     if probability <= .3:
+    #         variables.append(variable)
+    # for probVar in reversed(variableProbabilities):
+    #     probability, variable = probVar
+    #     if probability >= .7:
+    #         variables.append(variable)
+    # for probVar in variableProbabilities:
+    #     probability, variable = probVar
+    #     if probability > .3 and probability < .7:
+    #         variables.append(variable)
     return safeVariables, mineVariables
 
 
@@ -171,6 +173,46 @@ def copyKB(KB):
     for eq in KB:
         newKB.append(eq.copy())
     return newKB
+
+
+# def findValidConfigs(KB, variables, mineCounts):
+#     validConfigs = 0
+#     variableValues = [0, 1]
+#     combinations = [list(i) for i in product(
+#         variableValues, repeat=len(variables))]
+#     print("KB size", str(len(KB)))
+#     while len(combinations) > 0:
+#         prevVariableValues = []
+#         copiedKB = copyKB(KB)
+#         mineVariables = set()
+#         invalidConfig = False
+#         for i in range(0, len(combinations[0])):
+#             eq = [variables[i], combinations[0][i]]
+#             addEq(copiedKB, eq)
+#             prevVariableValues.append(combinations[0][i])
+#             if combinations[0][i] == 1:
+#                 mineVariables.add(variables[i])
+#             if not configIsValid(copiedKB):
+#                 invalidConfig = True
+#                 break
+#         if invalidConfig:
+#             newCombinations = []
+#             for combo in combinations:
+#                 matchesVariableValues = True
+#                 for j in range(0, len(prevVariableValues)):
+#                     if prevVariableValues[j] != combo[j]:
+#                         matchesVariableValues = False
+#                         break
+#                 if not matchesVariableValues:
+#                     newCombinations.append(combo)
+#             combinations = newCombinations
+#         else:
+#             validConfigs += 1
+#             for mineVariable in mineVariables:
+#                 mineCounts[mineVariable] += 1
+#             combinations = combinations[1:]
+
+#     return validConfigs
 
 
 def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
@@ -284,7 +326,7 @@ def display(dim, agent):
 #     return retlist
 
 
-dim = 20
+dim = 15
 
 gb = Board(dim)
 gb.set_mines(int(dim**2 * 0.4))
