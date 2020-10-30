@@ -67,24 +67,26 @@ def diffBoard(rnd_starts,dim):
     startBoard = Board(dim)
     startBoard.set_mines(mdensity)
     baseRate = simulate(startBoard,dim)
+    print("baseRate: " + str(baseRate))
     for coord in startBoard.minelist:
         baseRate = mutate(coord,startBoard.minelist,baseRate,dim)
     difficult = Board(dim)
     difficult.set_specific_mines(startBoard.minelist)
     print(difficult.board)
-    print(baseRate)
+    print("Forced Rate:" + str(baseRate))
         
 
 
 def simulate(startBoard, dim): #returns float
     i = 0
     detectionRate = 0
-    while (i < 15):
+    num_trials = 30
+    while (i < num_trials):
         agent = Agent(dim)
         strategy2(startBoard, dim, agent)
         detectionRate += len(agent.identifiedMineCoords) / (len(agent.identifiedMineCoords) + len(agent.trippedMineCoords))
         i += 1
-    return float(detectionRate) / 30
+    return float(detectionRate) / num_trials
     
 def mutate(coord, minelist,baserate,dim):
     i = 1
@@ -93,26 +95,25 @@ def mutate(coord, minelist,baserate,dim):
     changedCoord = [coord]
     while i <= dim:
         newc = c - i
-        if(c < 0):
-            newc = dim + c
+        if(newc < 0):
+            newc = dim + newc 
         if((r,newc) in minelist):
             i += 1
             continue
         minelist[minelist.index((r,c))] = (r,newc)
         mutatedBoard = Board(dim)
         mutatedBoard.set_specific_mines(minelist)
-        mutatedRate = simulate(mutatedBoard,dim)
-        print(mutatedRate)
+        mutatedRate = simulate(mutatedBoard,dim) #print(mutatedRate)
         if (mutatedRate <= newrate):
             newrate = mutatedRate
             changedCoord.clear()
             changedCoord.append((r,newc))
         c = newc
         i += 1
-    print(minelist)
-    print(changedCoord)
+    #print(minelist) #print(changedCoord)
     minelist[minelist.index((r,c))] = changedCoord[0]
     return newrate
 
-
+startTime = time.time()
 diffBoard(0,10) 
+print(time.time() - startTime)
