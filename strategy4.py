@@ -1,7 +1,7 @@
 import random as rnd
 import time
 
-from common import Agent, Board, Cell, findNeighboringCoords
+from common import Agent, Board, Cell
 from commonCSP import indexToTuple, tupleToIndex
 from commonProbability import (addMineEq, addSafeEq, createVariableGraph,
                                findValidConfigs, thinKB)
@@ -96,7 +96,9 @@ def strategy4(gboard, dim, agent):
                 if len(variables) > 0:
                     safeVariables, mineVariables = calculateVariableProbabilities(
                         KB, variables, dim)
-                # print("inner variables:", str(len(variables)))
+                else:
+                    safeVariables = []
+                    mineVariables = []
 
             if len(variables) > 0:
                 r, c = indexToTuple(variables[0], dim)
@@ -207,7 +209,7 @@ def display(dim, agent):
 
 i = 0
 
-dim = 10
+dim = 50
 
 while i < 20:
 

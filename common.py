@@ -9,6 +9,7 @@ class Board:
         self.dim = dim
         self.num_mines = 0
         self.minelist = []
+
     def set_mines(self, num_mines):
         count = 0
         self.num_mines = num_mines
@@ -18,7 +19,7 @@ class Board:
             col = pos % self.dim
             if self.board[row][col] != Cell.MINE:
                 self.board[row][col] = Cell.MINE
-                self.minelist.append((row,col))
+                self.minelist.append((row, col))
                 # update neighbors here
                 neighbors = findNeighboringCoords((row, col), self.dim)
                 for n in neighbors:
@@ -89,6 +90,7 @@ class Agent:
                 col.append(Cell((r, c), self.dim))
             self.board.append(col)
     # Does not check for false positives --> must be 100% certain that given coords are a mine
+
     def identifyMine(self, coords):
         row, col = coords
         cell = self.board[row][col]
