@@ -140,14 +140,15 @@ def calculateVariableProbabilities(KB, variables, dim):
     variableProbabilities = []
     for connectedVariables in variableGraph:
         validConfigurations = findValidConfigs(
-            KB, connectedVariables, set(), mineCounts)
+            KB, connectedVariables.copy(), set(), mineCounts)
         for variable in connectedVariables:
             if mineCounts[variable] == 0:
                 safeVariables.append(variable)
             elif mineCounts[variable] == validConfigurations:
                 mineVariables.append(variable)
             else:
-                mineProb = mineCounts[variable] / validConfigurations
+                mineProb = float(mineCounts[variable]) / \
+                    float(validConfigurations)
                 variableProbabilities.append((mineProb, variable))
     variables.clear()
     variableProbabilities.sort()
@@ -351,7 +352,7 @@ def display(dim, agent):
 #     return retlist
 
 
-dim = 50
+dim = 51
 
 gb = Board(dim)
 gb.set_mines(int(dim**2 * 0.4))
