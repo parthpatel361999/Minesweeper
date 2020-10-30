@@ -1,4 +1,5 @@
 from common import Agent, Board, display
+from strategy4 import strategy4
 from strategy3 import strategy3
 from strategy2 import strategy2
 from strategy1 import strategy1
@@ -21,7 +22,7 @@ def testStrategy():
                 gb.set_mines((dim**2)*m)
                 corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
                 ag = Agent(dim=dim, preferredCoords=corners)
-                strategy3(gb, dim, ag)
+                strategy4(gb, dim, ag)
                 result = display(dim, ag)
                 #print('result:', result)
                 successRate.append(result)
@@ -40,10 +41,10 @@ def testStrategy():
             plt.text(mineDensity[j], biglist[i][j], '('+'%.1f' % mineDensity[j]+', '+'%.3f'%biglist[i][j]+')', size='x-small', in_layout=True, snap=True)
             #plt.annotate(text='('+'%.1f' % mineDensity[j]+', '+'%.3f'%biglist[i][j]+')', xy=(mineDensity[j], biglist[i][j]))
         plt.plot(mineDensity, biglist[i])
-        plt.title('Strategy 3 with Board of Dimension {}'.format(dim))
+        plt.title('Strategy 4 with Board of Dimension {}'.format(dim))
         plt.xlabel('Mine Density')
         plt.ylabel('Average Final Score')
-        plt.savefig('Strat3_Dimension {}.png'.format(dim))
+        plt.savefig('Strat4_Dimension {}.png'.format(dim))
         dim += 10
 
     plt.figure(figsize=(10,10))
@@ -54,7 +55,7 @@ def testStrategy():
     plt.plot(mineDensity, biglist[3], label='Dimension 40')
     plt.plot(mineDensity, biglist[4], label='Dimension 50')
     plt.legend(loc='best')
-    plt.savefig('Strat3_Overlaid Graphs.png')
+    plt.savefig('Strat4_Overlaid Graphs.png')
 
     # f, ax = plt.subplots(5,1, figsize=(15,15))
     # dim = 10
