@@ -1,5 +1,5 @@
-from Agent import Agent,Cell 
-from Board import Board
+from common import Agent,Cell 
+from common import Board
 import random as rnd
 
 def identify_mine_neighbors(agent, gboard, coords):
@@ -29,8 +29,8 @@ def strategy1(gboard,dim,agent):
         agent.checkCell((r,c),gboard)
         identify_mine_neighbors(agent,gboard,(r,c))
         identify_safe_neighbors(agent,gboard,(r,c))
-        print((r,c))
-        display(dim,agent)
+        #print((r,c))
+        #display(dim,agent)
 
 
 def display(dim,agent):
@@ -48,13 +48,13 @@ def display(dim,agent):
     print(display.board)
 
 
-dim = 5
-gb = Board(dim)
-gb.set_mines(dim)
+# dim = 5
+# gb = Board(dim)
+# gb.set_mines(dim)
 
-print(gb.board)
+# print(gb.board)
 
-ag = Agent(dim)
-strategy1(gb,dim,ag)
+# ag = Agent(dim)
+# strategy1(gb,dim,ag)
 
-display(dim,ag)
+# display(dim,ag)
