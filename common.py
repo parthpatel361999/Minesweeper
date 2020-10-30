@@ -121,7 +121,7 @@ def findNeighboringCoords(coords, dim):
     cellRow, cellCol = coords
     potentialNeighbors = [(cellRow-1, cellCol-1),
                           (cellRow-1, cellCol),
-                          (cellRow-1, cellCol+1)
+                          (cellRow-1, cellCol+1),
                           (cellRow, cellCol-1),
                           (cellRow, cellCol+1),
                           (cellRow+1, cellCol-1),
