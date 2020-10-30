@@ -31,7 +31,7 @@ def strategy3(gboard, dim, agent):
             addMineEq(KB, currentCell, dim)
         else:
             addSafeEq(KB, currentCell, dim, agent, variables)
-        print("variables:", str(len(variables)), variables)
+        print("variables:", str(len(variables)))
 
         """
         If there are no unknown variables in the knowledge base, choose one of the preferred coordinates.
@@ -72,7 +72,7 @@ def strategy3(gboard, dim, agent):
                 KB = thinKB(KB, set(variables), agent)
                 safeVariables, mineVariables = calculateVariableProbabilities(
                     KB, variables, dim)
-                print("inner variables:", str(len(variables)), variables)
+                print("inner variables:", str(len(variables)))
 
             if len(variables) > 0:
                 r, c = indexToTuple(variables[0], dim)
@@ -134,13 +134,22 @@ def calculateVariableProbabilities(KB, variables, dim):
     mineCounts = {}
     for variable in variables:
         mineCounts[variable] = 0
-    variableGraph = createVariableGraph(variables.copy(), dim)
+    variableGraph, relevantKBs = createVariableGraph(
+        KB, variables.copy())
+    print("components:", len(variableGraph))
+    maxSize = 0
+    for component in variableGraph:
+        if len(component) > maxSize:
+            maxSize = len(component)
+    print("component max size:", maxSize)
     safeVariables = []
     mineVariables = []
     variableProbabilities = []
-    for connectedVariables in variableGraph:
+    for i in range(0, len(variableGraph)):
+        relevantKB = relevantKBs[i]
+        connectedVariables = variableGraph[i]
         validConfigurations = findValidConfigs(
-            KB, connectedVariables.copy(), set(), mineCounts)
+            relevantKB, connectedVariables.copy(), set(), mineCounts)
         for variable in connectedVariables:
             if mineCounts[variable] == 0:
                 safeVariables.append(variable)
@@ -170,28 +179,34 @@ def calculateVariableProbabilities(KB, variables, dim):
     return safeVariables, mineVariables
 
 
-def createVariableGraph(variables, dim):
+def createVariableGraph(KB, variables):
     variableGraph = []
+    relevantKBs = []
     while len(variables) > 0:
         node = variables[0]
         visited = set()
         queue = [node]
         connectedComponent = []
+        relevantKB = []
         while len(queue) > 0:
             checkNode = queue.pop(0)
             visited.add(checkNode)
             connectedComponent.append(checkNode)
             variables.remove(checkNode)
-            neighbors = findNeighboringCoords(
-                indexToTuple(checkNode, dim), dim)
+            neighbors = []
+            for eq in KB:
+                if eq not in relevantKB and checkNode in eq[0:len(eq) - 1]:
+                    for var in eq[0:len(eq) - 1]:
+                        if var != checkNode:
+                            neighbors.append(var)
+                    relevantKB.append(eq)
             for neighbor in neighbors:
-                nr, nc = neighbor
-                neighborVariable = tupleToIndex(nr, nc, dim)
-                if neighborVariable not in visited and neighborVariable in variables:
-                    queue.append(neighborVariable)
-                    visited.add(neighborVariable)
+                if neighbor not in visited and neighbor in variables:
+                    queue.append(neighbor)
+                    visited.add(neighbor)
         variableGraph.append(connectedComponent)
-    return variableGraph
+        relevantKBs.append(relevantKB)
+    return variableGraph, relevantKBs
 
 
 def copyKB(KB):
@@ -199,46 +214,6 @@ def copyKB(KB):
     for eq in KB:
         newKB.append(eq.copy())
     return newKB
-
-
-# def findValidConfigs(KB, variables, mineCounts):
-#     validConfigs = 0
-#     variableValues = [0, 1]
-#     combinations = [list(i) for i in product(
-#         variableValues, repeat=len(variables))]
-#     print("KB size", str(len(KB)))
-#     while len(combinations) > 0:
-#         prevVariableValues = []
-#         copiedKB = copyKB(KB)
-#         mineVariables = set()
-#         invalidConfig = False
-#         for i in range(0, len(combinations[0])):
-#             eq = [variables[i], combinations[0][i]]
-#             addEq(copiedKB, eq)
-#             prevVariableValues.append(combinations[0][i])
-#             if combinations[0][i] == 1:
-#                 mineVariables.add(variables[i])
-#             if not configIsValid(copiedKB):
-#                 invalidConfig = True
-#                 break
-#         if invalidConfig:
-#             newCombinations = []
-#             for combo in combinations:
-#                 matchesVariableValues = True
-#                 for j in range(0, len(prevVariableValues)):
-#                     if prevVariableValues[j] != combo[j]:
-#                         matchesVariableValues = False
-#                         break
-#                 if not matchesVariableValues:
-#                     newCombinations.append(combo)
-#             combinations = newCombinations
-#         else:
-#             validConfigs += 1
-#             for mineVariable in mineVariables:
-#                 mineCounts[mineVariable] += 1
-#             combinations = combinations[1:]
-
-#     return validConfigs
 
 
 def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
@@ -341,6 +316,10 @@ def display(dim, agent):
     print("Identified Mines/Total Mines: " +
           str(numIdentifiedMines / int(agent.dim**2 * 0.4)))
     print("total explored:", str(numTripped + numIdentifiedMines + numRevealed))
+    for coords in agent.identifiedMineCoords:
+        r, c = coords
+        if gb.board[r][c] != -1:
+            print(r, c, "reported as mine incorrectly")
     # print(findRepeats(agent.revealedCoords))
 
 
@@ -352,7 +331,7 @@ def display(dim, agent):
 #     return retlist
 
 
-dim = 51
+dim = 80
 
 gb = Board(dim)
 gb.set_mines(int(dim**2 * 0.4))
@@ -365,8 +344,6 @@ startTime = time.time()
 strategy3(gb, dim, ag)
 
 print("Display")
-print(ag.revealedCoords)
-print(ag.identifiedMineCoords)
 print(gb.board)
 display(dim, ag)
 endTime = time.time()
