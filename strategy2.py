@@ -67,23 +67,26 @@ def checkForInference(KB, agent, safeSet):
     return madeInference
 
 def reduceKB(KB, newEq):
-    modified = []
-    for i in range(len(KB)):
-        newEqLen = len(newEq)
-        KBEqLen = len(KB[i])
-        if (newEqLen <= KBEqLen and KB[i] != newEq and set(newEq[0 : newEqLen - 1]).issubset(set(KB[i][0 : KBEqLen - 1]))): #if newEq is a subset of an equation in KB
-            constraintDifference = KB[i][KBEqLen - 1] - newEq[newEqLen - 1] #store the difference of the constraint values
-            e = list(set(KB[i][0 : KBEqLen - 1]) - set(newEq[0 : newEqLen - 1])) #find the set difference
-            e.append(constraintDifference) #append the constaint difference to the end of the equation
-            if(e not in KB):
-                KB[i] = e
-                modified.append(e)
-            else:
-                KB[i] = []
-    while([] in KB):
-        KB.remove([])
-    for E in modified:
-        reduceKB(KB, E)
+    modified = [newEq]
+    while len(modified) > 0:
+        newEq = modified[0]
+        for i in range(len(KB)):
+            newEqLen = len(newEq)
+            KBEqLen = len(KB[i])
+            if (newEqLen <= KBEqLen and KB[i] != newEq and set(newEq[0 : newEqLen - 1]).issubset(set(KB[i][0 : KBEqLen - 1]))): #if newEq is a subset of an equation in KB
+                constraintDifference = KB[i][KBEqLen - 1] - newEq[newEqLen - 1] #store the difference of the constraint values
+                e = list(set(KB[i][0 : KBEqLen - 1]) - set(newEq[0 : newEqLen - 1])) #find the set difference
+                e.append(constraintDifference) #append the constaint difference to the end of the equation
+                if(e not in KB):
+                    KB[i] = e
+                    modified.append(e)
+                else:
+                    KB[i] = []
+        modified.remove(modified[0])
+        while([] in KB):
+            KB.remove([])
+    # for E in modified:
+    #     reduceKB(KB, E)
 
 def reduceEq(KB, newEq):
     for eq in KB: #for every equation eq in the KB, reduce the new equation by eq
@@ -127,7 +130,7 @@ def display(dim,agent):
     print("Revealed Cells: " + str(numRevealed))
     print("Identified Mines/Total Mines: " + str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
 
-dim = 30
+dim = 20
 gb = Board(dim)
 #gb.set_mines(40)
 gb.set_mines(dim**2 * 0.4)
