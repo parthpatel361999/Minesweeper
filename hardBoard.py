@@ -13,20 +13,20 @@ def hello(dim):
     worstScore = display(dim, agent)
     
     print(len(gboard.minelist))
-    for mine in gboard.minelist:
-        #mineList = gboard.minelist.copy()
-        # row, col = mine
+    
+    for mine in gboard.minelist: # iterate through every mine in original minelist
         print(gboard.minelist.index(mine))
         neighbors = findNeighboringCoords(mine, dim)
         for n in neighbors:
             if n in mineList:
                 continue
+            
             totalSuccessRate = 0
+            mineList.remove(mine)
+            mineList.append((n[0],n[1]))
             for i in range(10):
-                mineList = gboard.minelist.copy()
+                mineList = mineList.copy()
                 simBoard = Board(dim)
-                mineList.remove(mine)
-                mineList.append((n[0],n[1]))
                 simBoard.set_specific_mines(mineList)
                 agent.reset()
                 strategy2(simBoard, dim, agent)
@@ -36,6 +36,7 @@ def hello(dim):
             if averageScore <= worstScore: # times instead of just once
                 worstScore = averageScore
                 finalList = mineList.copy()
+            
     
 
     return worstScore, finalList
