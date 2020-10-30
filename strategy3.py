@@ -31,7 +31,7 @@ def strategy3(gboard, dim, agent):
             addMineEq(KB, currentCell, dim)
         else:
             addSafeEq(KB, currentCell, dim, agent, variables)
-        print("variables:", str(len(variables)))
+        # print("variables:", str(len(variables)))
 
         """
         If there are no unknown variables in the knowledge base, choose one of the preferred coordinates.
@@ -72,7 +72,7 @@ def strategy3(gboard, dim, agent):
                 KB = thinKB(KB, set(variables), agent)
                 safeVariables, mineVariables = calculateVariableProbabilities(
                     KB, variables, dim)
-                print("inner variables:", str(len(variables)))
+                # print("inner variables:", str(len(variables)))
 
             if len(variables) > 0:
                 r, c = indexToTuple(variables[0], dim)
@@ -130,18 +130,18 @@ def addMineEq(KB, cell, dim):
 
 
 def calculateVariableProbabilities(KB, variables, dim):
-    print("KB size:", str(len(KB)))
+    # print("KB size:", str(len(KB)))
     mineCounts = {}
     for variable in variables:
         mineCounts[variable] = 0
     variableGraph, relevantKBs = createVariableGraph(
         KB, variables.copy())
-    print("components:", len(variableGraph))
+    # print("components:", len(variableGraph))
     maxSize = 0
     for component in variableGraph:
         if len(component) > maxSize:
             maxSize = len(component)
-    print("component max size:", maxSize)
+    # print("component max size:", maxSize)
     safeVariables = []
     mineVariables = []
     variableProbabilities = []
@@ -164,18 +164,6 @@ def calculateVariableProbabilities(KB, variables, dim):
     for probVar in variableProbabilities:
         probability, variable = probVar
         variables.append(variable)
-    # for probVar in variableProbabilities:
-    #     probability, variable = probVar
-    #     if probability <= .3:
-    #         variables.append(variable)
-    # for probVar in reversed(variableProbabilities):
-    #     probability, variable = probVar
-    #     if probability >= .7:
-    #         variables.append(variable)
-    # for probVar in variableProbabilities:
-    #     probability, variable = probVar
-    #     if probability > .3 and probability < .7:
-    #         variables.append(variable)
     return safeVariables, mineVariables
 
 
@@ -330,22 +318,27 @@ def display(dim, agent):
 #             retlist.append(array[i])
 #     return retlist
 
+i = 0
 
-dim = 80
+dim = 40
 
-gb = Board(dim)
-gb.set_mines(int(dim**2 * 0.4))
+while i < 20:
 
-print("Strat 3")
-print(gb.board)
-corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
-ag = Agent(dim=dim, preferredCoords=corners)
-startTime = time.time()
-strategy3(gb, dim, ag)
+    gb = Board(dim)
+    gb.set_mines(int(dim**2 * 0.4))
 
-print("Display")
-print(gb.board)
-display(dim, ag)
-endTime = time.time()
-print("Time:", endTime - startTime,
-      "seconds (" + str((endTime - startTime)/60), "min)")
+    print("Strat 3")
+    print(gb.board)
+    corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
+    ag = Agent(dim=dim, preferredCoords=corners)
+    startTime = time.time()
+    strategy3(gb, dim, ag)
+
+    print("Display")
+    print(gb.board)
+    display(dim, ag)
+    endTime = time.time()
+    print("Time:", endTime - startTime,
+          "seconds (" + str((endTime - startTime)/60), "min)")
+
+    i += 1
