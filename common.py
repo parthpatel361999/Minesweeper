@@ -119,14 +119,14 @@ class Cell:
 
 def findNeighboringCoords(coords, dim):
     cellRow, cellCol = coords
-    potentialNeighbors = [(cellRow, cellCol+1),
-                          (cellRow, cellCol-1),
-                          (cellRow+1, cellCol),
+    potentialNeighbors = [(cellRow-1, cellCol-1),
                           (cellRow-1, cellCol),
-                          (cellRow+1, cellCol+1),
-                          (cellRow-1, cellCol-1),
-                          (cellRow+1, cellCol-1),
                           (cellRow-1, cellCol+1)
+                          (cellRow, cellCol-1),
+                          (cellRow, cellCol+1),
+                          (cellRow+1, cellCol-1),
+                          (cellRow+1, cellCol),
+                          (cellRow+1, cellCol+1),
                           ]
     neighbors = []
     for pn in potentialNeighbors:
