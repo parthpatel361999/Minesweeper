@@ -1,3 +1,5 @@
+import sys
+
 from common import Cell
 
 
@@ -12,42 +14,49 @@ def addEq(KB, equation):  # add an equation to the KB
 
 
 def reduceKB(KB, newEq):
-    modified = []
-    for i in range(len(KB)):
-        # if newEq is a subset of an equation in KB
-        if (KB[i] != newEq and set(newEq[0: len(newEq) - 1]).issubset(set(KB[i][0: len(KB[i]) - 1]))):
-            # store the difference of the constraint values
-            constraintDifference = KB[i][len(
-                KB[i]) - 1] - newEq[len(newEq) - 1]
-            # find the set difference
-            e = list(set(KB[i][0: len(KB[i]) - 1]) -
-                     set(newEq[0: len(newEq) - 1]))
-            # append the constaint difference to the end of the equation
-            e.append(constraintDifference)
-            if(e not in KB):
-                KB[i] = e
-                modified.append(e)
-            else:
-                KB[i] = []
-    while([] in KB):
-        KB.remove([])
-    for E in modified:
-        reduceKB(KB, E)
+    modified = [newEq]
+    while len(modified) > 0:
+        newEq = modified[0]
+        newEqLen = len(newEq)
+        for i in range(len(KB)):
+            KBEqLen = len(KB[i])
+            # if newEq is a subset of an equation in KB
+            if (newEqLen <= KBEqLen and KB[i][KBEqLen - 1] >= newEq[newEqLen - 1] and KB[i] != newEq and set(newEq[0: newEqLen - 1]).issubset(set(KB[i][0: KBEqLen - 1]))):
+                # store the difference of the constraint values
+                constraintDifference = KB[i][KBEqLen - 1] - newEq[newEqLen - 1]
+
+                # find the set difference
+                e = list(set(KB[i][0: KBEqLen - 1]) -
+                         set(newEq[0: newEqLen - 1]))
+                # append the constaint difference to the end of the equation
+                e.append(constraintDifference)
+                if(e not in KB):
+                    KB[i] = e
+                    modified.append(e)
+                else:
+                    KB[i] = []
+        modified.remove(modified[0])
+        while([] in KB):
+            KB.remove([])
+    # for E in modified:
+    #     reduceKB(KB, E)
 
 
 def reduceEq(KB, newEq):
     for eq in KB:  # for every equation eq in the KB, reduce the new equation by eq
+        eqLen = len(eq)
+        newEqLen = len(newEq)
         # if eq is a subset of the new equation
-        if (set(eq[0: len(eq) - 1]).issubset(set(newEq[0: len(newEq) - 1]))):
-            newEqLength = len(newEq)
+        if (eqLen <= newEqLen and set(eq[0: eqLen - 1]).issubset(set(newEq[0: newEqLen - 1]))):
+            #newEqLength = len(newEq)
             # store the difference of the constraint values
-            constraintDifference = newEq[len(newEq) - 1] - eq[len(eq) - 1]
+            constraintDifference = newEq[newEqLen - 1] - eq[eqLen - 1]
             # find the set difference
             newEq.extend(
-                list(set(newEq[0: len(newEq) - 1]) - set(eq[0: len(eq) - 1])))
+                list(set(newEq[0: newEqLen - 1]) - set(eq[0: eqLen - 1])))
             # append the constaint difference to the end of the equation
             newEq.append(constraintDifference)
-            for _ in range(newEqLength):
+            for _ in range(newEqLen):
                 newEq.remove(newEq[0])
 
 
