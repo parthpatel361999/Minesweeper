@@ -61,7 +61,7 @@ def display(dim,agent):
     print("Identified Mines: " + str(numIdentifiedMines))
     print("Revealed Cells: " + str(numRevealed))
     print("Identified Mines/Total Mines: " + str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
-
+'''
 def ncr(n, r):
     r = min(r, n-r)
     numer = reduce(op.mul, range(n, n-r, -1), 1)
@@ -97,7 +97,7 @@ def localSearch(dim, numMines, numRestarts):
         if(avgDetectionRate < worstDetectionRate):
             worstBoard = copy.deepcopy(godBoard.board) #check if neccessary to deepcopy here
             worstDetectionRate = avgDetectionRate
-
+'''
 #created set_specific_mines()
 #created totalEuclid()
 
@@ -123,4 +123,77 @@ for i in range(numBoards):
 print(worstBoard)
 print(worstRate)
 """
+def diffBoard(rnd_starts,dim):
+    mdensity = int( 0.4*dim**2 )
+    agent = Agent(dim)
+    startBoard = Board(dim)
+    startBoard.set_mines(mdensity)
+    baseRate = simulate(startBoard)
+    triedconfigs = set() #holds new row,cols
+    i = 0 
+    for row,col in startBoard.minelist:
+        print(row,col)
+        r = c = 0
+        mutate((row,col),startBoard.minelist)
+        i = i + 1
+
+
+    # first generate random board
+    # in a do while type of loop (runs for rnd_start iterations)
+        # run strategy 2 30 times (simulate function ret type: float)
+        #calculate the average detection rate
+        # mutate the board:
+            # keep moving mine with wraparounds (left)
+            # if there is a mine hop over the mine
+
+
+    strategy2(startBoard, dim, agent)
+
+def simulate(startBoard, dim): #returns float
+    i = 0
+    detectionRate = 0
+    while (i < 30):
+        agent = Agent(dim)
+        strategy2(startBoard, dim, agent)
+        detectionRate += len(agent.identifiedMineCoords) / (len(agent.identifiedMineCoords) + len(agent.trippedMineCoords))
+        i += 1
+    return float(detectionRate) / 30
+    
+def mutate((r,c), minelist,baserate,triedconfigs,dim, index_minelist)): 
+    #TODO fix this
+
+    #will return the mutated board. 1 cell has changed location.
+    #move r,c left (c-1)
+    #generate a new board, set all the mines except for r,c where set r,c-1 
+    #check if there is a mine there, if yes, then set at r, c-2
+    #if r,c at this point is at 
+    i = 1 
+    br = baserate
+    ml2 = minelist.copy()
+    while (i < dim):
+        newc = c - i
+        if (newc < 0):
+            newc = dim + newc
+        
+        if ((r,newc) in minelist):
+            continue
+        
+        else:
+            minelist.remove((r,c))
+            minelist.add((r,newc))
+            newboard = Board(dim)
+            newboard.set_specific_mines(minelist)
+            newrate = simulate(newboard)
+            if(newrate <= br):
+                br = newrate
+                ml2 = minelist
+            c = newc
+        i = i + 1
+
+    
+    return newrate 
+
+    
+
+
 print(totalEuclid(worstBoard))

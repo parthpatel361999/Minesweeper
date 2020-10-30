@@ -8,7 +8,7 @@ class Board:
         self.board = np.zeros([dim, dim], dtype=int)
         self.dim = dim
         self.num_mines = 0
-
+        self.minelist = set()
     def set_mines(self, num_mines):
         count = 0
         self.num_mines = num_mines
@@ -18,6 +18,7 @@ class Board:
             col = pos % self.dim
             if self.board[row][col] != Cell.MINE:
                 self.board[row][col] = Cell.MINE
+                self.minelist.add((row,col))
                 # update neighbors here
                 neighbors = findNeighboringCoords((row, col), self.dim)
                 for n in neighbors:
