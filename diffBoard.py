@@ -3,14 +3,16 @@ from strategy2 import strategy2
 
 def hardBoard(dim):
     gboard = Board(dim)
-    gboard.set_mines(dim**2 * 0.4)
+    gboard.set_mines(dim**2 * 0.7)
     agent = Agent(dim)
     mineList = gboard.minelist.copy()
     # finalList = mineList.copy()
 
     strategy2(gboard,dim, agent)
     worstScore = display(dim, agent)
+    print('first score:', worstScore)
 
+    length = len(gboard.minelist)
     for mine in gboard.minelist:
         print(mine)
         neighbors = findNeighboringCoords(mine, dim)
@@ -24,6 +26,7 @@ def findWorstAmongNeighbors(locations, mineList, currentMine, dim, worstScore):
     successTracker = {} # keeps track of average successRate for each neighbor
     listTracker = {} # keeps track of mine lists generated for each neighbor
     agent = Agent(dim) 
+    print("worst score:", worstScore)
     for n in locations: # iterate through neighbors
         if n in mineList: # ignore all configs where mine is moved to another mine location
             continue
@@ -40,8 +43,11 @@ def findWorstAmongNeighbors(locations, mineList, currentMine, dim, worstScore):
             agent.reset()
             i += 1
         successTracker[float(sumSuccessRate)/10] = n
+        #print("list of successes:", successTracker)
         listTracker[n] = referenceList
 
+    if not successTracker:
+        return mineList.copy(), worstScore
     lowest = min(successTracker.keys())
     if lowest <= float(worstScore):
         finder = successTracker[lowest]
