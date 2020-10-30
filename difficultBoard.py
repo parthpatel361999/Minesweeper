@@ -61,139 +61,58 @@ def display(dim,agent):
     print("Identified Mines: " + str(numIdentifiedMines))
     print("Revealed Cells: " + str(numRevealed))
     print("Identified Mines/Total Mines: " + str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
-'''
-def ncr(n, r):
-    r = min(r, n-r)
-    numer = reduce(op.mul, range(n, n-r, -1), 1)
-    denom = reduce(op.mul, range(1, r+1), 1)
-    return numer // denom
 
-def totalEuclid(board):
-    mines = []
-    for i in range(len(board)):
-        for j in range(len(board[i])):
-            if board[i][j] == -1:
-                mines.append((i, j))
-    total = 0
-    for i in range(len(mines)):
-        for j in range(i + 1, len(mines)):
-            (r1, c1) = mines[i]
-            (r2, c2) = mines[j]
-            total = total + ((r1-r2)**2 + (c1-c2)**2)**0.5
-    return total
-
-def localSearch(dim, numMines, numRestarts):
-    worstDetectionRate = 1
-    worstBoard = []
-    numTrials = 20
-    for _ in range(numRestarts):
-        godBoard = Board(dim)
-        godBoard.set_mines(dim**2 * 0.4) #check for unique config
-        for _ in range(numTrials):
-            agent = Agent(dim)
-            strategy2(godBoard, dim, agent)
-            avgDetectionRate = avgDetectionRate + len(agent.identifiedMineCoords) / (len(agent.identifiedMineCoords) + len(agent.trippedMineCoords))
-        avgDetectionRate = avgDetectionRate / numTrials
-        if(avgDetectionRate < worstDetectionRate):
-            worstBoard = copy.deepcopy(godBoard.board) #check if neccessary to deepcopy here
-            worstDetectionRate = avgDetectionRate
-'''
-#created set_specific_mines()
-#created totalEuclid()
-
-"""Brute Force checker
-dim = 3
-numBoards = 100
-numTrials = 30
-worstBoard = []
-worstRate = 1
-boardSet = []
-for i in range(numBoards):
-    godBoard = Board(dim)
-    godBoard.set_mines(dim**2 * 0.4)
-    avgDetectionRate = 0
-    for _ in range(numTrials):
-        agent = Agent(dim)
-        strategy2(godBoard, dim, agent)
-        avgDetectionRate = avgDetectionRate + len(agent.identifiedMineCoords) / (len(agent.identifiedMineCoords) + len(agent.trippedMineCoords))
-    avgDetectionRate = avgDetectionRate / numTrials
-    if(avgDetectionRate < worstRate):
-        worstBoard = copy.deepcopy(godBoard.board) #check if neccessary to deepcopy here
-        worstRate = avgDetectionRate
-print(worstBoard)
-print(worstRate)
-"""
 def diffBoard(rnd_starts,dim):
     mdensity = int( 0.4*dim**2 )
-    agent = Agent(dim)
     startBoard = Board(dim)
     startBoard.set_mines(mdensity)
-    baseRate = simulate(startBoard)
-    triedconfigs = set() #holds new row,cols
-    i = 0 
-    for row,col in startBoard.minelist:
-        print(row,col)
-        r = c = 0
-        mutate((row,col),startBoard.minelist)
-        i = i + 1
+    baseRate = simulate(startBoard,dim)
+    for coord in startBoard.minelist:
+        baseRate = mutate(coord,startBoard.minelist,baseRate,dim)
+    difficult = Board(dim)
+    difficult.set_specific_mines(startBoard.minelist)
+    print(difficult.board)
+    print(baseRate)
+        
 
-
-    # first generate random board
-    # in a do while type of loop (runs for rnd_start iterations)
-        # run strategy 2 30 times (simulate function ret type: float)
-        #calculate the average detection rate
-        # mutate the board:
-            # keep moving mine with wraparounds (left)
-            # if there is a mine hop over the mine
-
-
-    strategy2(startBoard, dim, agent)
 
 def simulate(startBoard, dim): #returns float
     i = 0
     detectionRate = 0
-    while (i < 30):
+    while (i < 15):
         agent = Agent(dim)
         strategy2(startBoard, dim, agent)
         detectionRate += len(agent.identifiedMineCoords) / (len(agent.identifiedMineCoords) + len(agent.trippedMineCoords))
         i += 1
     return float(detectionRate) / 30
     
-def mutate((r,c), minelist,baserate,triedconfigs,dim, index_minelist)): 
-    #TODO fix this
-
-    #will return the mutated board. 1 cell has changed location.
-    #move r,c left (c-1)
-    #generate a new board, set all the mines except for r,c where set r,c-1 
-    #check if there is a mine there, if yes, then set at r, c-2
-    #if r,c at this point is at 
-    i = 1 
-    br = baserate
-    ml2 = minelist.copy()
-    while (i < dim):
+def mutate(coord, minelist,baserate,dim):
+    i = 1
+    r,c = coord 
+    newrate = baserate
+    changedCoord = [coord]
+    while i <= dim:
         newc = c - i
-        if (newc < 0):
-            newc = dim + newc
-        
-        if ((r,newc) in minelist):
+        if(c < 0):
+            newc = dim + c
+        if((r,newc) in minelist):
+            i += 1
             continue
-        
-        else:
-            minelist.remove((r,c))
-            minelist.add((r,newc))
-            newboard = Board(dim)
-            newboard.set_specific_mines(minelist)
-            newrate = simulate(newboard)
-            if(newrate <= br):
-                br = newrate
-                ml2 = minelist
-            c = newc
-        i = i + 1
-
-    
-    return newrate 
-
-    
+        minelist[minelist.index((r,c))] = (r,newc)
+        mutatedBoard = Board(dim)
+        mutatedBoard.set_specific_mines(minelist)
+        mutatedRate = simulate(mutatedBoard,dim)
+        print(mutatedRate)
+        if (mutatedRate <= newrate):
+            newrate = mutatedRate
+            changedCoord.clear()
+            changedCoord.append((r,newc))
+        c = newc
+        i += 1
+    print(minelist)
+    print(changedCoord)
+    minelist[minelist.index((r,c))] = changedCoord[0]
+    return newrate
 
 
-print(totalEuclid(worstBoard))
+diffBoard(0,10) 
