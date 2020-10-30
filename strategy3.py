@@ -1,8 +1,7 @@
 import random as rnd
 import time
-from itertools import product
 
-from common import Agent, Board, Cell
+from common import Agent, Board, Cell, findNeighboringCoords
 from commonCSP import addEq, indexToTuple, tupleToIndex
 
 
@@ -56,7 +55,7 @@ def strategy3(gboard, dim, agent):
             """
             KB = thinKB(KB, set(variables), agent)
             safeVariables, mineVariables = calculateVariableProbabilities(
-                KB, variables)
+                KB, variables, dim)
             while len(safeVariables) > 0 or len(mineVariables) > 0:
                 for variable in safeVariables:
                     if variable in variables:
@@ -72,7 +71,7 @@ def strategy3(gboard, dim, agent):
                     addMineEq(KB, mineCell, dim)
                 KB = thinKB(KB, set(variables), agent)
                 safeVariables, mineVariables = calculateVariableProbabilities(
-                    KB, variables)
+                    KB, variables, dim)
                 print("inner variables:", str(len(variables)), variables)
 
             if len(variables) > 0:
@@ -130,24 +129,26 @@ def addMineEq(KB, cell, dim):
     addEq(KB, mineEq)
 
 
-def calculateVariableProbabilities(KB, variables):
+def calculateVariableProbabilities(KB, variables, dim):
     print("KB size:", str(len(KB)))
     mineCounts = {}
     for variable in variables:
         mineCounts[variable] = 0
-    validConfigurations = findValidConfigs(
-        KB, variables, set(), mineCounts)
+    variableGraph = createVariableGraph(variables.copy(), dim)
     safeVariables = []
     mineVariables = []
     variableProbabilities = []
-    for variable in mineCounts:
-        if mineCounts[variable] == 0:
-            safeVariables.append(variable)
-        elif mineCounts[variable] == validConfigurations:
-            mineVariables.append(variable)
-        else:
-            mineProb = mineCounts[variable] / validConfigurations
-            variableProbabilities.append((mineProb, variable))
+    for connectedVariables in variableGraph:
+        validConfigurations = findValidConfigs(
+            KB, connectedVariables, set(), mineCounts)
+        for variable in connectedVariables:
+            if mineCounts[variable] == 0:
+                safeVariables.append(variable)
+            elif mineCounts[variable] == validConfigurations:
+                mineVariables.append(variable)
+            else:
+                mineProb = mineCounts[variable] / validConfigurations
+                variableProbabilities.append((mineProb, variable))
     variables.clear()
     variableProbabilities.sort()
     for probVar in variableProbabilities:
@@ -166,6 +167,30 @@ def calculateVariableProbabilities(KB, variables):
     #     if probability > .3 and probability < .7:
     #         variables.append(variable)
     return safeVariables, mineVariables
+
+
+def createVariableGraph(variables, dim):
+    variableGraph = []
+    while len(variables) > 0:
+        node = variables[0]
+        visited = set()
+        queue = [node]
+        connectedComponent = []
+        while len(queue) > 0:
+            checkNode = queue.pop(0)
+            visited.add(checkNode)
+            connectedComponent.append(checkNode)
+            variables.remove(checkNode)
+            neighbors = findNeighboringCoords(
+                indexToTuple(checkNode, dim), dim)
+            for neighbor in neighbors:
+                nr, nc = neighbor
+                neighborVariable = tupleToIndex(nr, nc, dim)
+                if neighborVariable not in visited and neighborVariable in variables:
+                    queue.append(neighborVariable)
+                    visited.add(neighborVariable)
+        variableGraph.append(connectedComponent)
+    return variableGraph
 
 
 def copyKB(KB):
@@ -326,7 +351,7 @@ def display(dim, agent):
 #     return retlist
 
 
-dim = 15
+dim = 50
 
 gb = Board(dim)
 gb.set_mines(int(dim**2 * 0.4))
