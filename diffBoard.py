@@ -3,7 +3,7 @@ from strategy2 import strategy2
 
 def hardBoard(dim):
     gboard = Board(dim)
-    gboard.set_mines(dim**2 * 0.7)
+    gboard.set_mines(dim**2 * 0.4)
     agent = Agent(dim)
     mineList = gboard.minelist.copy()
     # finalList = mineList.copy()
