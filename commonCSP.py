@@ -13,7 +13,8 @@ def addEq(KB, equation):  # add an equation to the KB
 
 def reduceKB(KB, newEq):
     modified = []
-    for i in range(len(KB)):
+    KBlen = len(KB)
+    for i in range(KBlen):
         newEqLen = len(newEq)
         KBEqLen = len(KB[i])
         # if newEq is a subset of an equation in KB
