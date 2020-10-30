@@ -8,7 +8,7 @@ class Board:
         self.board = np.zeros([dim, dim], dtype=int)
         self.dim = dim
         self.num_mines = 0
-
+        self.minelist = []
     def set_mines(self, num_mines):
         count = 0
         self.num_mines = num_mines
@@ -16,6 +16,21 @@ class Board:
             pos = rnd.randint(0, self.dim*self.dim-1)
             row = pos // self.dim
             col = pos % self.dim
+            if self.board[row][col] != Cell.MINE:
+                self.board[row][col] = Cell.MINE
+                self.minelist.append((row,col))
+                # update neighbors here
+                neighbors = findNeighboringCoords((row, col), self.dim)
+                for n in neighbors:
+                    nrow, ncol = n
+                    if self.board[nrow][ncol] != Cell.MINE:
+                        self.board[nrow, ncol] += 1
+                count += 1
+
+    def set_specific_mines(self, locations):
+        count = 0
+        self.num_mines = len(locations)
+        for (row, col) in locations:
             if self.board[row][col] != Cell.MINE:
                 self.board[row][col] = Cell.MINE
                 # update neighbors here
@@ -62,6 +77,17 @@ class Agent:
                 neighborCell.numSafeNeighbors += 1
         return cell
 
+    def reset(self):
+        self.revealedCoords = []
+        self.trippedMineCoords = []
+        self.identifiedMineCoords = []
+        #self.preferredCoords = preferredCoords
+        self.board = []
+        for r in range(self.dim):
+            col = []
+            for c in range(self.dim):
+                col.append(Cell((r, c), self.dim))
+            self.board.append(col)
     # Does not check for false positives --> must be 100% certain that given coords are a mine
     def identifyMine(self, coords):
         row, col = coords
