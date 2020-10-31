@@ -2,11 +2,12 @@ import random as rnd
 import time
 
 from common import Agent, Board, Cell, findNeighboringCoords, display
-from commonCSP import addEq, indexToTuple, tupleToIndex
-from commonProbability import thinKB, addSafeEq, addMineEq, createVariableGraph, copyKB, findValidConfigs, configIsValid
+from commonCSP import indexToTuple, tupleToIndex
+from commonProbability import (addMineEq, addSafeEq, createVariableGraph,
+                               findValidConfigs, thinKB)
 
 # double improved agent
-def strategy3(gboard, dim, agent):
+def strategy4(gboard, dim, agent):
     """
     Declare a list for the knowledge base, which will be filled with equations (represented as lists 
     themselves). Also declare a set for the unknown variables in the knowledge base.
@@ -31,6 +32,14 @@ def strategy3(gboard, dim, agent):
             addMineEq(KB, currentCell, dim)
         else:
             addSafeEq(KB, currentCell, dim, agent, variables)
+
+        safeVarsToAdd, mineVarsToAdd = checkForInferences(KB, variables)
+        while len(safeVarsToAdd) > 0 or len(mineVarsToAdd) > 0:
+            addInferredSafeAndMineVariables(
+                safeVarsToAdd, mineVarsToAdd, gboard, KB, agent, variables)
+            safeVarsToAdd, mineVarsToAdd = checkForInferences(KB, variables)
+
+        KB = thinKB(KB, set(variables), agent)
         # print("variables:", str(len(variables)))
 
         """
@@ -52,25 +61,40 @@ def strategy3(gboard, dim, agent):
             coordinates as the next to be explored; else, choose from the preferred coordinates (or
             random coordinates, if necessary).
             """
-            KB = thinKB(KB, set(variables), agent)
             safeVariables, mineVariables = calculateVariableProbabilities(
                 KB, variables, dim)
             while len(safeVariables) > 0 or len(mineVariables) > 0:
-                for variable in safeVariables:
-                    if variable in variables:
-                        variables.remove(variable)
-                    coords = indexToTuple(variable, dim)
-                    safeCell = agent.checkCell(coords, gboard)
-                    addSafeEq(KB, safeCell, dim, agent, variables)
+
                 for variable in mineVariables:
                     if variable in variables:
                         variables.remove(variable)
-                    coords = indexToTuple(variable, dim)
+                    coords = indexToTuple(variable, agent.dim)
                     mineCell = agent.identifyMine(coords)
-                    addMineEq(KB, mineCell, dim)
+                    addMineEq(KB, mineCell, agent.dim)
+
+                for variable in safeVariables:
+                    if variable in variables:
+                        variables.remove(variable)
+                    coords = indexToTuple(variable, agent.dim)
+                    cell = agent.checkCell(coords, gboard)
+                    if cell.type == Cell.MINE:
+                        addMineEq(KB, cell, dim)
+                    else:
+                        addSafeEq(KB, cell, dim, agent, variables)
+
+                safeVarsToAdd, mineVarsToAdd = checkForInferences(
+                    KB, variables)
+
+                while len(safeVarsToAdd) > 0 or len(mineVarsToAdd) > 0:
+                    addInferredSafeAndMineVariables(
+                        safeVarsToAdd, mineVarsToAdd, gboard, KB, agent, variables)
+                    safeVarsToAdd, mineVarsToAdd = checkForInferences(
+                        KB, variables)
+
                 KB = thinKB(KB, set(variables), agent)
-                safeVariables, mineVariables = calculateVariableProbabilities(
-                    KB, variables, dim)
+                if len(variables) > 0:
+                    safeVariables, mineVariables = calculateVariableProbabilities(
+                        KB, variables, dim)
                 # print("inner variables:", str(len(variables)))
 
             if len(variables) > 0:
@@ -78,6 +102,41 @@ def strategy3(gboard, dim, agent):
                 variables.remove(variables[0])
             elif not agent.isFinished():
                 r, c = agent.choosePreferredOrRandomCoords()
+
+
+def checkForInferences(KB, variables):
+    mineVarsToAdd = set()
+    safeVarsToAdd = set()
+    for eq in KB:
+        if len(eq) - 1 == eq[-1]:
+            for var in eq[0:len(eq) - 1]:
+                if var in variables:
+                    variables.remove(var)
+                    mineVarsToAdd.add(var)
+
+        elif eq[-1] == 0:
+            for var in eq[0:len(eq) - 1]:
+                if var in variables:
+                    variables.remove(var)
+                    safeVarsToAdd.add(var)
+
+    return safeVarsToAdd, mineVarsToAdd
+
+
+def addInferredSafeAndMineVariables(safeVarsToAdd, mineVarsToAdd, gboard, KB, agent, variables):
+    for variable in safeVarsToAdd:
+        if variable in variables:
+            variables.remove(variable)
+        coords = indexToTuple(variable, agent.dim)
+        safeCell = agent.checkCell(coords, gboard)
+        addSafeEq(KB, safeCell, agent.dim, agent, variables)
+    for variable in mineVarsToAdd:
+        if variable in variables:
+            variables.remove(variable)
+        coords = indexToTuple(variable, agent.dim)
+        mineCell = agent.identifyMine(coords)
+        addMineEq(KB, mineCell, agent.dim)
+
 
 def calculateVariableProbabilities(KB, variables, dim):
     # print("KB size:", str(len(KB)))
@@ -101,14 +160,15 @@ def calculateVariableProbabilities(KB, variables, dim):
         validConfigurations = findValidConfigs(
             relevantKB, connectedVariables.copy(), set(), mineCounts)
         for variable in connectedVariables:
-            if mineCounts[variable] == 0:
-                safeVariables.append(variable)
-            elif mineCounts[variable] == validConfigurations:
+            if mineCounts[variable] == validConfigurations:
                 mineVariables.append(variable)
             else:
                 mineProb = float(mineCounts[variable]) / \
                     float(validConfigurations)
-                variableProbabilities.append((mineProb, variable))
+                if mineProb < 1.0/8.0:
+                    safeVariables.append(variable)
+                else:
+                    variableProbabilities.append((mineProb, variable))
     variables.clear()
     variableProbabilities.sort()
     for probVar in variableProbabilities:
@@ -116,31 +176,10 @@ def calculateVariableProbabilities(KB, variables, dim):
         variables.append(variable)
     return safeVariables, mineVariables
 
-def checkForInferences(KB, variables, mineVariables):
-    madeInference = False
-    eqsToAdd = []
-    for eq in KB:
-        if len(eq) - 1 == eq[-1]:
-            for var in eq[0:len(eq) - 1]:
-                if var in variables:
-                    variables.remove(var)
-                    mineVariables.add(var)
-                    mineEq = [var, 1]
-                    eqsToAdd.append(mineEq)
-                    madeInference = True
-        elif eq[-1] == 0:
-            for var in eq[0:len(eq) - 1]:
-                if var in variables:
-                    variables.remove(var)
-                    safeEq = [var, 0]
-                    eqsToAdd.append(safeEq)
-                    madeInference = True
-    for eq in eqsToAdd:
-        addEq(KB,  eq)
-    return madeInference
-
 '''
-dim = 30
+i = 0
+
+dim = 20
 
 gb = Board(dim)
 gb.set_mines(int(dim**2 * 0.4))
@@ -149,7 +188,7 @@ print(gb.board)
 corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
 ag = Agent(dim=dim, preferredCoords=corners)
 startTime = time.time()
-strategy3(gb, dim, ag)
+strategy4(gb, dim, ag)
 
 print(gb.board)
 display(dim, ag)

@@ -137,27 +137,20 @@ def findNeighboringCoords(coords, dim):
     return neighbors
 
 
-def display(dim, agent):
-    numTripped = 0
-    numIdentifiedMines = 0
-    numRevealed = 0
+def display(dim,agent):
     display = Board(dim)
-    for i in range(0, dim):
-        for j in range(0, dim):
-            if((i, j) in agent.trippedMineCoords):
+    for i in range(0,dim):
+        for j in range(0,dim):
+            if( (i,j) in agent.trippedMineCoords):
                 display.board[i][j] = '2'
-                numTripped += 1
-            elif((i, j) in agent.identifiedMineCoords):
+            elif((i,j) in agent.identifiedMineCoords):
                 display.board[i][j] = '1'
-                numIdentifiedMines += 1
-            elif((i, j) in agent.revealedCoords):
+            elif((i,j) in agent.revealedCoords):
                 display.board[i][j] = '9'
-                numRevealed += 1
             else:
                 continue
     print(display.board)
-    print("Tripped Mines: " + str(numTripped))
-    print("Identified Mines: " + str(numIdentifiedMines))
-    print("Revealed Cells: " + str(numRevealed))
-    print("Identified Mines/Total Mines: " +
-          str(numIdentifiedMines / (numTripped + numIdentifiedMines)))
+    print("Tripped Mines: " + str(len(agent.trippedMineCoords)))
+    print("Identified Mines: " + str(len(agent.identifiedMineCoords)))
+    print("Revealed Cells: " + str(len(agent.revealedCoords)))
+    print("Identified Mines/Total Mines: " + str(len(agent.identifiedMineCoords) / (len(agent.trippedMineCoords) + len(agent.identifiedMineCoords))))

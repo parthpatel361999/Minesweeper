@@ -12,7 +12,6 @@ def addEq(KB, equation):  # add an equation to the KB
     reduceKB(KB, equation)
     KB.append(equation)  # insert the new equation into the KB
 
-
 def reduceKB(KB, newEq):
     modified = [newEq]
     while len(modified) > 0:
@@ -38,9 +37,6 @@ def reduceKB(KB, newEq):
         modified.remove(modified[0])
         while([] in KB):
             KB.remove([])
-    # for E in modified:
-    #     reduceKB(KB, E)
-
 
 def reduceEq(KB, newEq):
     for eq in KB:  # for every equation eq in the KB, reduce the new equation by eq
@@ -58,7 +54,6 @@ def reduceEq(KB, newEq):
             newEq.append(constraintDifference)
             for _ in range(newEqLen):
                 newEq.remove(newEq[0])
-
 
 def tupleToIndex(r, c, dim):
     return dim * r + c  # converts cell tuples to unique integers

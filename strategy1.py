@@ -1,6 +1,6 @@
-from Agent import Agent,Cell 
-from Board import Board
+from common import Agent, Cell, Board, display
 import random as rnd
+import time
 
 def identify_mine_neighbors(agent, gboard, coords):
     r,c = coords
@@ -9,6 +9,7 @@ def identify_mine_neighbors(agent, gboard, coords):
             if(agent.board[cn[0]][cn[1]].revealed == False):
                 agent.identifyMine(cn)
     return
+
 def identify_safe_neighbors(agent,gboard,coords):
     r,c = coords
     if((len(agent.board[r][c].neighbors) - gboard.board[r][c] - agent.board[r][c].numSafeNeighbors) == agent.board[r][c].numHiddenNeighbors):
@@ -29,32 +30,17 @@ def strategy1(gboard,dim,agent):
         agent.checkCell((r,c),gboard)
         identify_mine_neighbors(agent,gboard,(r,c))
         identify_safe_neighbors(agent,gboard,(r,c))
-        print((r,c))
-        display(dim,agent)
 
-
-def display(dim,agent):
-    display = Board(dim)
-    for i in range(0,dim):
-        for j in range(0,dim):
-            if( (i,j) in agent.trippedMineCoords):
-                display.board[i][j] = '2'
-            elif((i,j) in agent.identifiedMineCoords):
-                display.board[i][j] = '1'
-            elif((i,j) in agent.revealedCoords):
-                display.board[i][j] = '9'
-            else:
-                continue
-    print(display.board)
-
-
-dim = 5
+'''
+dim = 50
 gb = Board(dim)
-gb.set_mines(dim)
-
+gb.set_mines(int(0.4*dim**2))
 print(gb.board)
-
 ag = Agent(dim)
+startTime = time.time()
 strategy1(gb,dim,ag)
-
 display(dim,ag)
+endTime = time.time()
+print("Time:", endTime - startTime,
+        "seconds (" + str((endTime - startTime)/60), "min)")
+'''
