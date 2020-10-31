@@ -78,7 +78,13 @@ def strategy3(gboard, dim, agent):
                 variables.remove(variables[0])
             elif not agent.isFinished():
                 r, c = agent.choosePreferredOrRandomCoords()
+'''
+calculateVariableProbabilities is a function that creates connected
+graphs between the cell and its neighbors. It also generates valid
+configurations of the different mine placements, and then calculates the
+probability of a cell being a mine. 
 
+'''
 def calculateVariableProbabilities(KB, variables, dim):
     # print("KB size:", str(len(KB)))
     mineCounts = {}
@@ -115,7 +121,14 @@ def calculateVariableProbabilities(KB, variables, dim):
         probability, variable = probVar
         variables.append(variable)
     return safeVariables, mineVariables
+'''
+checkForInferences checks the Knowledge Base to see if 
+any of the equations have reduced such that they can all 
+be determined to be mines or to be safe. If it makes one
+inference, it continues to make inferences until all 
+possible interpretations have been made. 
 
+'''
 def checkForInferences(KB, variables, mineVariables):
     madeInference = False
     eqsToAdd = []
