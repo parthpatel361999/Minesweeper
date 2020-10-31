@@ -22,29 +22,39 @@ def strategy2(gboard, dim, agent):
     c = rnd.randint(0,dim-1)
 
     while((dim*dim) - len(agent.revealedCoords) - len(agent.identifiedMineCoords) != 0):
-        while ((r,c) in agent.revealedCoords or (r,c) in agent.identifiedMineCoords): #pick coordinates again if cell has already been explored
+        #Pick an unvisited cell
+        while ((r,c) in agent.revealedCoords or (r,c) in agent.identifiedMineCoords): 
             r = rnd.randint(0,dim-1)
             c = rnd.randint(0,dim-1)
         
-        currentCell = agent.checkCell((r,c),gboard) #check the cell at (r, c)
+        #Check the cell at (r, c)
+        currentCell = agent.checkCell((r,c),gboard) 
 
-        if (currentCell.type == -1): #the revealed cell is a mine
+        #if the cell is a mine
+        if (currentCell.type == -1):
             newEq = [tupleToIndex(r, c, dim), 1]
-            addEq(KB, newEq) #insert the equation [(r, c) = 1] into the KB
-        else: #the revealed cell is safe
+            #insert the equation [(r, c) = 1] into the KB
+            addEq(KB, newEq) 
+        #if the revealed cell is safe
+        else: 
             newEq1 = [tupleToIndex(r, c, dim), 0]
-            addEq(KB, newEq1) #insert the equation [(r, c) = 0] into the KB
+            #insert the equation [(r, c) = 0] into the KB
+            addEq(KB, newEq1) 
             newEq2 = []
-            for n in currentCell.neighbors: #find all neighbors of (r, c)
+            #find all neighbors of (r, c)
+            for n in currentCell.neighbors:
                 newEq2.append(tupleToIndex(n[0], n[1], dim))
             newEq2.append(currentCell.type)
-            addEq(KB, newEq2) #insert the equation [(neighbor1) + (neighbor2) + ... + (neighborN) = hint] into the KB
+            #insert the equation [(neighbor1) + (neighbor2) + ... + (neighborN) = hint] into the KB
+            addEq(KB, newEq2) 
 
         madeInference = True
         while(madeInference):
-            madeInference = checkForInference(KB, agent, inferredSafeSet) #check to see if a valid inference can be made
+            #check to see if a valid inference can be made
+            madeInference = checkForInference(KB, agent, inferredSafeSet) 
         
-        if (len(inferredSafeSet) > 0): #if a cell is inferred to be safe, reveal it next
+        #if a cell is inferred to be safe, reveal it next
+        if (len(inferredSafeSet) > 0): 
             (r, c) = inferredSafeSet.pop()
 
 '''
