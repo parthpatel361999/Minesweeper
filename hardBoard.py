@@ -15,7 +15,8 @@ def hardBoard(dim):
     length = len(gboard.minelist)
     #print('length of mineList:', length)
     for mine in gboard.minelist:
-        print('exploring mine:', gboard.minelist.index(mine), '/', length)
+        if gboard.minelist.index(mine) % 10 == 0:
+            print('exploring mine:', gboard.minelist.index(mine), '/', length)
         neighbors = findVHNeighbors(mine, dim)
         mineList, worstScore = findWorstAmongNeighbors(neighbors, mineList, mine, dim, worstScore)
     b = Board(dim)
@@ -56,19 +57,28 @@ def findWorstAmongNeighbors(locations, mineList, currentMine, dim, worstScore):
         referenceList = mineList.copy() # copy the orginal Mine List to run the sims
         referenceList.remove(currentMine) # remove where the mine currently is
         referenceList.append(n) # add where the mine should now be in the sim
-        i = 0
-        sumSuccessRate = 0
-        while (i < 10): # should be 30 for stat significant
-            testBoard = Board(dim) 
-            testBoard.set_specific_mines(referenceList) # generate a board with the specific mines
-            strategy2(testBoard, dim, agent) 
-            sumSuccessRate += display(dim, agent)
-            agent.reset()
-            i += 1
-        successTracker[float(sumSuccessRate)/10] = n
-        #print("list of successes:", successTracker)
+# ---------------------------------------------------------------------------------------------------      
+        tBoard = Board(dim)
+        tBoard.set_specific_mines(referenceList)
+        strategy2(tBoard, dim,agent)
+        successTracker[display(dim,agent)] = n
         listTracker[n] = referenceList
-
+        
+# ---------------------------------------------------------------------------------------------------
+        
+        # i = 0
+        # sumSuccessRate = 0
+        # while (i < 10): # should be 30 for stat significant
+        #     testBoard = Board(dim) 
+        #     testBoard.set_specific_mines(referenceList) # generate a board with the specific mines
+        #     strategy2(testBoard, dim, agent) 
+        #     sumSuccessRate += display(dim, agent)
+        #     agent.reset()
+        #     i += 1
+        # successTracker[float(sumSuccessRate)/10] = n
+        # #print("list of successes:", successTracker)
+        # listTracker[n] = referenceList
+# ---------------------------------------------------------------------------------------------------
     if not successTracker:
         return mineList.copy(), worstScore
     lowest = min(successTracker.keys())
@@ -80,6 +90,6 @@ def findWorstAmongNeighbors(locations, mineList, currentMine, dim, worstScore):
     return mineList.copy(), worstScore # gonna have to change the list
 
 i = 0
-while (i < 5):
-    hardBoard(15)
+while (i < 10):
+    hardBoard(10)
     i += 1
