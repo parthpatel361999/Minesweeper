@@ -73,6 +73,8 @@ def strategy4(gboard, dim, agent, visualizer):
                         variables.remove(variable)
                     coords = indexToTuple(variable, agent.dim)
                     mineCell = agent.identifyMine(coords)
+                    print("probability mine at iteration",
+                          str(visualizer.iteration))
                     visualizer.createVisualization()
                     addMineEq(KB, mineCell, agent.dim)
 
@@ -81,6 +83,8 @@ def strategy4(gboard, dim, agent, visualizer):
                         variables.remove(variable)
                     coords = indexToTuple(variable, agent.dim)
                     cell = agent.checkCell(coords, gboard)
+                    print("probability safe at iteration",
+                          str(visualizer.iteration))
                     visualizer.createVisualization()
                     if cell.type == Cell.MINE:
                         addMineEq(KB, cell, dim)
@@ -107,6 +111,7 @@ def strategy4(gboard, dim, agent, visualizer):
             if len(variables) > 0:
                 r, c = indexToTuple(variables[0], dim)
                 variables.remove(variables[0])
+                print("safest at iteration", str(visualizer.iteration))
             elif not agent.isFinished():
                 r, c = agent.choosePreferredOrRandomCoords()
 
@@ -136,6 +141,7 @@ def addInferredSafeAndMineVariables(safeVarsToAdd, mineVarsToAdd, gboard, KB, ag
             variables.remove(variable)
         coords = indexToTuple(variable, agent.dim)
         safeCell = agent.checkCell(coords, gboard)
+        print("inferred safe at iteration", str(visualizer.iteration))
         visualizer.createVisualization()
         addSafeEq(KB, safeCell, agent.dim, agent, variables)
     for variable in mineVarsToAdd:
@@ -143,6 +149,7 @@ def addInferredSafeAndMineVariables(safeVarsToAdd, mineVarsToAdd, gboard, KB, ag
             variables.remove(variable)
         coords = indexToTuple(variable, agent.dim)
         mineCell = agent.identifyMine(coords)
+        print("inferred mine at iteration", str(visualizer.iteration))
         visualizer.createVisualization()
         addMineEq(KB, mineCell, agent.dim)
 
