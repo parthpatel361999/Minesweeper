@@ -35,11 +35,11 @@ def hardBoard(dim):
     
     worstScore = display(dim,agent)
     baseScore = worstScore
-    print("First Score: %", baseScore)
+    print("First Score: ", baseScore)
     mineList = gboard.minelist.copy()
     delta = 0.01
     j = 0
-    while(j < dim):
+    while(j < 1):
         for mine in mineList:
             #print(mine)
             neighbors = findVHNeighbors(mine, dim)
@@ -50,12 +50,12 @@ def hardBoard(dim):
         else: 
             baseScore = worstScore
             j = 0
-            #print(baseScore)
+            print(baseScore)
         print("Current Score: " + str(baseScore) + " j = " + str(j))
     if(local_optima):
         local_optima.pop(0)
     local_optima.append(mineList)
-    print("Final Score:" + str(baseScore))
+    print("Final Score: " + str(baseScore))
     printboard = Board(dim)
     printboard.set_specific_mines(local_optima[0])
     print(printboard.board)
@@ -98,5 +98,7 @@ def findWorstAmongNeighbors(locations, mineList, currentMine, dim, worstScore):
 
     return mineList.copy(), worstScore # gonna have to change the list
 
-
-hardBoard(10)
+i=0
+while i < 5:
+    hardBoard(15)
+    i+=1
