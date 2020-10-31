@@ -14,6 +14,7 @@ def testing():
             firstSuccess = []
             finalSuccess = []
             while i < 30:
+                print('mineDen: ', m, 'iteration: ', i)
                 x,y = hardBoard(1, dim)
                 firstSuccess.append(x)
                 finalSuccess.append(y)
