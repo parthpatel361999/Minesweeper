@@ -9,6 +9,8 @@ def identify_mine_neighbors(agent, gboard, coords, visualizer):
     if((gboard.board[r][c] - agent.board[r][c].numMineNeighbors) == agent.board[r][c].numHiddenNeighbors):
         for cn in agent.board[r][c].neighbors:
             if(agent.board[cn[0]][cn[1]].revealed == False):
+                visualizer.showNextStep(
+                    cn[0], cn[1], Visualizer.INFERRED_MINE_STEP)
                 agent.identifyMine(cn)
                 visualizer.createVisualization()
     return
@@ -19,6 +21,8 @@ def identify_safe_neighbors(agent, gboard, coords, visualizer):
     if((len(agent.board[r][c].neighbors) - gboard.board[r][c] - agent.board[r][c].numSafeNeighbors) == agent.board[r][c].numHiddenNeighbors):
         for cn in agent.board[r][c].neighbors:
             if(agent.board[cn[0]][cn[1]].revealed == False):
+                visualizer.showNextStep(
+                    cn[0], cn[1], Visualizer.INFERRED_SAFE_STEP)
                 agent.checkCell(cn, gboard)
                 visualizer.createVisualization()
                 identify_mine_neighbors(
@@ -30,11 +34,8 @@ def identify_safe_neighbors(agent, gboard, coords, visualizer):
 
 def strategy1(gboard, dim, agent, visualizer):
     while((dim*dim) - len(agent.revealedCoords) - len(agent.identifiedMineCoords) != 0):
-        r = rnd.randint(0, dim-1)
-        c = rnd.randint(0, dim-1)
-        while ((r, c) in agent.revealedCoords or (r, c) in agent.identifiedMineCoords):
-            r = rnd.randint(0, dim-1)
-            c = rnd.randint(0, dim-1)
+        r, c = agent.chooseRandomCoords()
+        visualizer.showNextStep(r, c, Visualizer.RANDOM_STEP)
         agent.checkCell((r, c), gboard)
         visualizer.createVisualization()
 

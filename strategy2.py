@@ -7,11 +7,12 @@ from common import Agent, Board, Cell, findNeighboringCoords
 from visualization import Visualizer
 
 
-def strategy2(gboard, dim, agent, visualization):
+def strategy2(gboard, dim, agent, visualizer):
     KB = []
     inferredSafeSet = set()
     r = rnd.randint(0, dim-1)
     c = rnd.randint(0, dim-1)
+    pickedrandomly = True
 
     # run until all cells are explored
     while((dim*dim) - len(agent.revealedCoords) - len(agent.identifiedMineCoords) != 0):
@@ -19,10 +20,15 @@ def strategy2(gboard, dim, agent, visualization):
         while ((r, c) in agent.revealedCoords or (r, c) in agent.identifiedMineCoords):
             r = rnd.randint(0, dim-1)
             c = rnd.randint(0, dim-1)
+            pickedrandomly = True
 
+        if pickedrandomly:
+            visualizer.showNextStep(r, c, Visualizer.RANDOM_STEP)
+        else:
+            visualizer.showNextStep(r, c, Visualizer.INFERRED_SAFE_STEP)
         currentCell = agent.checkCell(
             (r, c), gboard)  # check the cell at (r, c)
-        visualization.createVisualization()
+        visualizer.createVisualization()
 
         if (currentCell.type == -1):  # the revealed cell is a mine
             newEq = [tupleToIndex(r, c, dim), 1]
@@ -41,11 +47,12 @@ def strategy2(gboard, dim, agent, visualization):
         while(madeInference):
             # check to see if a valid inference can be made
             madeInference = checkForInference(
-                KB, agent, inferredSafeSet, visualization)
+                KB, agent, inferredSafeSet, visualizer)
 
         if (len(inferredSafeSet) > 0):  # if a cell is inferred to be safe, reveal it next
-            print("inferred safe at iteration", str(visualization.iteration))
+            print("inferred safe at iteration", str(visualizer.iteration))
             (r, c) = inferredSafeSet.pop()
+            pickedrandomly = False
 
 
 def addEq(KB, equation):  # add an equation to the KB
@@ -58,7 +65,7 @@ def addEq(KB, equation):  # add an equation to the KB
     KB.append(equation)  # insert the new equation into the KB
 
 
-def checkForInference(KB, agent, safeSet, visualization):
+def checkForInference(KB, agent, safeSet, visualizer):
     madeInference = False
     for eq in KB:
         if (len(eq) - 1 == eq[-1]):  # All cells in this eq must be mines
@@ -67,10 +74,12 @@ def checkForInference(KB, agent, safeSet, visualization):
                 # if the cell is not a tripped or inferred mine
                 if (agent.board[r][c].type != Cell.MINE):
                     # identify the cell as an inferred mine
+                    visualizer.showNextStep(
+                        r, c, Visualizer.INFERRED_MINE_STEP)
                     agent.identifyMine((r, c))
                     print("inferred mine at iteration",
-                          str(visualization.iteration))
-                    visualization.createVisualization()
+                          str(visualizer.iteration))
+                    visualizer.createVisualization()
                     # add the equation [(r, c) = 1] into the KB
                     addEq(KB, [var, 1])
                     madeInference = True  # flag to indicate an inference has been made

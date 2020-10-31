@@ -9,7 +9,7 @@ from visualization import Visualizer
 
 
 # double improved agent
-def strategy3(gboard, dim, agent, visualization):
+def strategy3(gboard, dim, agent, visualizer):
     """
     Declare a list for the knowledge base, which will be filled with equations (represented as lists 
     themselves). Also declare a set for the unknown variables in the knowledge base.
@@ -22,6 +22,7 @@ def strategy3(gboard, dim, agent, visualization):
     choose a random pair of coordinates for the first move.
     """
     r, c = agent.choosePreferredOrRandomCoords()
+    visualizer.showNextStep(r, c, Visualizer.RANDOM_STEP)
 
     while not agent.isFinished():
         """
@@ -30,7 +31,7 @@ def strategy3(gboard, dim, agent, visualization):
 
         # print(r, c, "or", tupleToIndex(r, c, dim))
         currentCell = agent.checkCell((r, c), gboard)
-        visualization.createVisualization()
+        visualizer.createVisualization()
         if currentCell.type == Cell.MINE:
             addMineEq(KB, currentCell, dim)
         else:
@@ -48,6 +49,7 @@ def strategy3(gboard, dim, agent, visualization):
             break
         elif len(variables) == 0:
             r, c = agent.choosePreferredOrRandomCoords()
+            visualizer.showNextStep(r, c, Visualizer.RANDOM_STEP)
         else:
             """
             Calculate the probabilities for all variables, and find the variables that are guaranteed to
@@ -65,15 +67,19 @@ def strategy3(gboard, dim, agent, visualization):
                     if variable in variables:
                         variables.remove(variable)
                     coords = indexToTuple(variable, dim)
+                    visualizer.showNextStep(
+                        coords[0], coords[1], Visualizer.PROBABILITY_SAFE_STEP)
                     safeCell = agent.checkCell(coords, gboard)
-                    visualization.createVisualization()
+                    visualizer.createVisualization()
                     addSafeEq(KB, safeCell, dim, agent, variables)
                 for variable in mineVariables:
                     if variable in variables:
                         variables.remove(variable)
                     coords = indexToTuple(variable, dim)
+                    visualizer.showNextStep(
+                        coords[0], coords[1], Visualizer.PROBABILITY_MINE_STEP)
                     mineCell = agent.identifyMine(coords)
-                    visualization.createVisualization()
+                    visualizer.createVisualization()
                     addMineEq(KB, mineCell, dim)
                 KB = thinKB(KB, set(variables), agent)
                 safeVariables, mineVariables = calculateVariableProbabilities(
@@ -83,8 +89,10 @@ def strategy3(gboard, dim, agent, visualization):
             if len(variables) > 0:
                 r, c = indexToTuple(variables[0], dim)
                 variables.remove(variables[0])
+                visualizer.showNextStep(r, c, Visualizer.SAFEST_STEP)
             elif not agent.isFinished():
                 r, c = agent.choosePreferredOrRandomCoords()
+                visualizer.showNextStep(r, c, Visualizer.RANDOM_STEP)
 
 
 def calculateVariableProbabilities(KB, variables, dim):

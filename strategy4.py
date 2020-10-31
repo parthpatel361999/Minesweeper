@@ -22,6 +22,7 @@ def strategy4(gboard, dim, agent, visualizer):
     choose a random pair of coordinates for the first move.
     """
     r, c = agent.choosePreferredOrRandomCoords()
+    visualizer.showNextStep(r, c, Visualizer.RANDOM_STEP)
 
     while not agent.isFinished():
         """
@@ -55,6 +56,7 @@ def strategy4(gboard, dim, agent, visualizer):
             break
         elif len(variables) == 0:
             r, c = agent.choosePreferredOrRandomCoords()
+            visualizer.showNextStep(r, c, Visualizer.RANDOM_STEP)
         else:
             """
             Calculate the probabilities for all variables, and find the variables that are guaranteed to
@@ -72,6 +74,8 @@ def strategy4(gboard, dim, agent, visualizer):
                     if variable in variables:
                         variables.remove(variable)
                     coords = indexToTuple(variable, agent.dim)
+                    visualizer.showNextStep(
+                        coords[0], coords[1], Visualizer.PROBABILITY_MINE_STEP)
                     mineCell = agent.identifyMine(coords)
                     print("probability mine at iteration",
                           str(visualizer.iteration))
@@ -82,6 +86,8 @@ def strategy4(gboard, dim, agent, visualizer):
                     if variable in variables:
                         variables.remove(variable)
                     coords = indexToTuple(variable, agent.dim)
+                    visualizer.showNextStep(
+                        coords[0], coords[1], Visualizer.PROBABILITY_SAFE_STEP)
                     cell = agent.checkCell(coords, gboard)
                     print("probability safe at iteration",
                           str(visualizer.iteration))
@@ -112,8 +118,10 @@ def strategy4(gboard, dim, agent, visualizer):
                 r, c = indexToTuple(variables[0], dim)
                 variables.remove(variables[0])
                 print("safest at iteration", str(visualizer.iteration))
+                visualizer.showNextStep(r, c, Visualizer.SAFEST_STEP)
             elif not agent.isFinished():
                 r, c = agent.choosePreferredOrRandomCoords()
+                visualizer.showNextStep(r, c, Visualizer.RANDOM_STEP)
 
 
 def checkForInferences(KB, variables):
@@ -140,6 +148,8 @@ def addInferredSafeAndMineVariables(safeVarsToAdd, mineVarsToAdd, gboard, KB, ag
         if variable in variables:
             variables.remove(variable)
         coords = indexToTuple(variable, agent.dim)
+        visualizer.showNextStep(
+            coords[0], coords[1], Visualizer.INFERRED_SAFE_STEP)
         safeCell = agent.checkCell(coords, gboard)
         print("inferred safe at iteration", str(visualizer.iteration))
         visualizer.createVisualization()
@@ -148,6 +158,8 @@ def addInferredSafeAndMineVariables(safeVarsToAdd, mineVarsToAdd, gboard, KB, ag
         if variable in variables:
             variables.remove(variable)
         coords = indexToTuple(variable, agent.dim)
+        visualizer.showNextStep(
+            coords[0], coords[1], Visualizer.INFERRED_MINE_STEP)
         mineCell = agent.identifyMine(coords)
         print("inferred mine at iteration", str(visualizer.iteration))
         visualizer.createVisualization()
