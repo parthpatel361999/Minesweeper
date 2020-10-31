@@ -180,7 +180,7 @@ def calculateVariableProbabilities(KB, variables, dim):
     return safeVariables, mineVariables
 
 
-def display(dim, agent):
+def display(dim, agent, gb):
     numTripped = 0
     numIdentifiedMines = 0
     numRevealed = 0
@@ -198,7 +198,12 @@ def display(dim, agent):
                 numRevealed += 1
             else:
                 continue
+    count = 0
+    for x in agent.identifiedMineCoords:
+        if x in gb.minelist:
+            count+=1
     print(display.board)
+    print('correctly identified mines:', float(count)/float(len(gb.minelist)) )
     print("Tripped Mines: " + str(numTripped))
     print("Identified Mines: " + str(numIdentifiedMines))
     print("Revealed Cells: " + str(numRevealed))
@@ -207,27 +212,27 @@ def display(dim, agent):
     print("total explored:", str(numTripped + numIdentifiedMines + numRevealed))
 
 
-# i = 0
+# # i = 0
 
-# dim = 50
+dim = 100
 
-# while i < 20:
+# # # while i < 20:
 
-#     gb = Board(dim)
-#     gb.set_mines(int(dim**2 * 0.4))
+gb = Board(dim)
+gb.set_mines(int(dim**2 * 0.4))
 
-#     print("Strat 3")
-#     print(gb.board)
-#     corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
-#     ag = Agent(dim=dim, preferredCoords=corners)
-#     startTime = time.time()
-#     strategy4(gb, dim, ag)
+# # #print("Strat 3")
+# # #print(gb.board)
+corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
+ag = Agent(dim=dim, preferredCoords=corners)
+startTime = time.time()
+strategy4(gb, dim, ag)
 
-#     print("Display")
-#     print(gb.board)
-#     display(dim, ag)
-#     endTime = time.time()
-#     print("Time:", endTime - startTime,
-#           "seconds (" + str((endTime - startTime)/60), "min)")
-#     print(i)
-#     i += 1
+print("Display")
+print(gb.board)
+display(dim, ag, gb)
+endTime = time.time()
+print("Time:", endTime - startTime,
+        "seconds (" + str((endTime - startTime)/60), "min)")
+# print(i)
+# i += 1
