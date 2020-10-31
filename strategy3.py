@@ -303,11 +303,11 @@ def display(dim, agent):
     print("Identified Mines/Total Mines: " +
           str(numIdentifiedMines / int(agent.dim**2 * 0.4)))
     print("total explored:", str(numTripped + numIdentifiedMines + numRevealed))
-    for coords in agent.identifiedMineCoords:
-        r, c = coords
-        if gb.board[r][c] != -1:
-            print(r, c, "reported as mine incorrectly")
-    # print(findRepeats(agent.revealedCoords))
+    # for coords in agent.identifiedMineCoords:
+    #     r, c = coords
+    #     if gb.board[r][c] != -1:
+    #         print(r, c, "reported as mine incorrectly")
+    # # print(findRepeats(agent.revealedCoords))
 
 
 # def findRepeats(array):
