@@ -5,10 +5,11 @@ from common import Agent, Board, Cell
 from commonCSP import indexToTuple, tupleToIndex
 from commonProbability import (addMineEq, addSafeEq, createVariableGraph,
                                findValidConfigs, thinKB)
+from visualization import Visualizer
 
 
 # double improved agent
-def strategy4(gboard, dim, agent):
+def strategy4(gboard, dim, agent, visualizer):
     """
     Declare a list for the knowledge base, which will be filled with equations (represented as lists 
     themselves). Also declare a set for the unknown variables in the knowledge base.
@@ -29,6 +30,7 @@ def strategy4(gboard, dim, agent):
 
         # print(r, c, "or", tupleToIndex(r, c, dim))
         currentCell = agent.checkCell((r, c), gboard)
+        visualizer.createVisualization()
         if currentCell.type == Cell.MINE:
             addMineEq(KB, currentCell, dim)
         else:
@@ -37,7 +39,7 @@ def strategy4(gboard, dim, agent):
         safeVarsToAdd, mineVarsToAdd = checkForInferences(KB, variables)
         while len(safeVarsToAdd) > 0 or len(mineVarsToAdd) > 0:
             addInferredSafeAndMineVariables(
-                safeVarsToAdd, mineVarsToAdd, gboard, KB, agent, variables)
+                safeVarsToAdd, mineVarsToAdd, gboard, KB, agent, variables, visualizer)
             safeVarsToAdd, mineVarsToAdd = checkForInferences(KB, variables)
 
         KB = thinKB(KB, set(variables), agent)
@@ -71,6 +73,7 @@ def strategy4(gboard, dim, agent):
                         variables.remove(variable)
                     coords = indexToTuple(variable, agent.dim)
                     mineCell = agent.identifyMine(coords)
+                    visualizer.createVisualization()
                     addMineEq(KB, mineCell, agent.dim)
 
                 for variable in safeVariables:
@@ -78,6 +81,7 @@ def strategy4(gboard, dim, agent):
                         variables.remove(variable)
                     coords = indexToTuple(variable, agent.dim)
                     cell = agent.checkCell(coords, gboard)
+                    visualizer.createVisualization()
                     if cell.type == Cell.MINE:
                         addMineEq(KB, cell, dim)
                     else:
@@ -88,7 +92,7 @@ def strategy4(gboard, dim, agent):
 
                 while len(safeVarsToAdd) > 0 or len(mineVarsToAdd) > 0:
                     addInferredSafeAndMineVariables(
-                        safeVarsToAdd, mineVarsToAdd, gboard, KB, agent, variables)
+                        safeVarsToAdd, mineVarsToAdd, gboard, KB, agent, variables, visualizer)
                     safeVarsToAdd, mineVarsToAdd = checkForInferences(
                         KB, variables)
 
@@ -126,18 +130,20 @@ def checkForInferences(KB, variables):
     return safeVarsToAdd, mineVarsToAdd
 
 
-def addInferredSafeAndMineVariables(safeVarsToAdd, mineVarsToAdd, gboard, KB, agent, variables):
+def addInferredSafeAndMineVariables(safeVarsToAdd, mineVarsToAdd, gboard, KB, agent, variables, visualizer):
     for variable in safeVarsToAdd:
         if variable in variables:
             variables.remove(variable)
         coords = indexToTuple(variable, agent.dim)
         safeCell = agent.checkCell(coords, gboard)
+        visualizer.createVisualization()
         addSafeEq(KB, safeCell, agent.dim, agent, variables)
     for variable in mineVarsToAdd:
         if variable in variables:
             variables.remove(variable)
         coords = indexToTuple(variable, agent.dim)
         mineCell = agent.identifyMine(coords)
+        visualizer.createVisualization()
         addMineEq(KB, mineCell, agent.dim)
 
 
@@ -207,27 +213,21 @@ def display(dim, agent):
     print("total explored:", str(numTripped + numIdentifiedMines + numRevealed))
 
 
-i = 0
+dim = 10
 
-dim = 50
+gb = Board(dim)
+gb.set_mines(int(dim**2 * 0.4))
 
-while i < 20:
 
-    gb = Board(dim)
-    gb.set_mines(int(dim**2 * 0.4))
+corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
+ag = Agent(dim=dim, preferredCoords=corners)
+vis = Visualizer(ag, 4)
+startTime = time.time()
+strategy4(gb, dim, ag, vis)
 
-    print("Strat 3")
-    print(gb.board)
-    corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
-    ag = Agent(dim=dim, preferredCoords=corners)
-    startTime = time.time()
-    strategy4(gb, dim, ag)
-
-    print("Display")
-    print(gb.board)
-    display(dim, ag)
-    endTime = time.time()
-    print("Time:", endTime - startTime,
-          "seconds (" + str((endTime - startTime)/60), "min)")
-    print(i)
-    i += 1
+print("Display")
+print(gb.board)
+display(dim, ag)
+endTime = time.time()
+print("Time:", endTime - startTime,
+      "seconds (" + str((endTime - startTime)/60), "min)")
