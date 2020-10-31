@@ -23,7 +23,7 @@ def findVHNeighbors(coords, dim):
     return neighbors
 
 
-def hardBoard(dim):
+def hardBoard(n,dim):
     # finalList = mineList.copy()
     local_optima = []
     baseScore = 0 
@@ -39,7 +39,7 @@ def hardBoard(dim):
     mineList = gboard.minelist.copy()
     delta = 0.01
     j = 0
-    while(j < 1):
+    while(j < n):
         for mine in mineList:
             #print(mine)
             neighbors = findVHNeighbors(mine, dim)
@@ -49,7 +49,6 @@ def hardBoard(dim):
             j+=1
         else: 
             baseScore = worstScore
-            j = 0
             print(baseScore)
         print("Current Score: " + str(baseScore) + " j = " + str(j))
     if(local_optima):
@@ -100,5 +99,5 @@ def findWorstAmongNeighbors(locations, mineList, currentMine, dim, worstScore):
 
 i=0
 while i < 5:
-    hardBoard(15)
+    hardBoard(1,15)
     i+=1
