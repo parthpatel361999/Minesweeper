@@ -2,6 +2,9 @@ import random as rnd
 
 import numpy as np
 
+'''
+Define a Board class. This class keeps track of a "board" as a 2-dimensional array of integers representing the status of each location in this maze
+'''
 
 class Board:
     def __init__(self, dim):
@@ -9,6 +12,7 @@ class Board:
         self.dim = dim
         self.num_mines = 0
 
+    #randomly place num_mines mines in the board
     def set_mines(self, num_mines):
         count = 0
         self.num_mines = num_mines
@@ -18,17 +22,20 @@ class Board:
             col = pos % self.dim
             if self.board[row][col] != Cell.MINE:
                 self.board[row][col] = Cell.MINE
-                # update neighbors here
+                #for each mine placed, increment the neighbors clue value by 1.
                 neighbors = findNeighboringCoords((row, col), self.dim)
                 for n in neighbors:
                     nrow, ncol = n
                     if self.board[nrow][ncol] != Cell.MINE:
                         self.board[nrow, ncol] += 1
                 count += 1
-
+    
     def isSolved(self, num_discovered):
         return num_discovered == self.num_mines
 
+'''
+Define an Agent class. This class keeps track of the agents moves using a 2-dimensional array of integers.
+'''
 
 class Agent:
     def __init__(self, dim, preferredCoords=[]):
@@ -44,6 +51,7 @@ class Agent:
                 col.append(Cell((r, c), dim))
             self.board.append(col)
 
+    #update the agent with the information associated with a newly revealed cell. 
     def checkCell(self, coords, masterBoard):
         row, col = coords
         self.revealedCoords.append(coords)
@@ -74,12 +82,15 @@ class Agent:
             neighborCell.numMineNeighbors += 1
         return cell
 
+    #check if a cell has been visited
     def hasExplored(self, coords):
         return coords in self.revealedCoords or coords in self.identifiedMineCoords
 
+    #check if all cells have been visited
     def isFinished(self):
         return len(self.revealedCoords) + len(self.identifiedMineCoords) >= self.dim**2
 
+    #choose from preferred coords if not visited, otherwise generate a random unvisited cell
     def choosePreferredOrRandomCoords(self):
         r = c = -1
         for preferredCoords in self.preferredCoords:
@@ -90,6 +101,7 @@ class Agent:
             r, c = self.chooseRandomCoords()
         return r, c
 
+    #choose a random unexplored cell
     def chooseRandomCoords(self):
         r = rnd.randint(0, self.dim - 1)
         c = rnd.randint(0, self.dim - 1)
