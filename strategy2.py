@@ -4,13 +4,24 @@ import random as rnd
 import numpy as np
 import time
 
+'''
+Run strategy 2. 
+1. Select a random unvisited cell
+2. Reveal the cell
+3. If the cell is a mine cell, add the equation [var, 1] to the Knowledge Base
+   If the cell is a safe cell, add the equations [var, 0] and [(neighbors of var), var's clue] to the Knowledge Base
+4. Check if any inferences can be made from the Knowledge Base
+5. If a cell has been inferred to be safe, reveal it in the next iteration
+   Else, pick a random unvisited cell for the next iteration
+'''
+
 def strategy2(gboard, dim, agent):
     KB = []
     inferredSafeSet = set()
     r = rnd.randint(0,dim-1)
     c = rnd.randint(0,dim-1)
 
-    while((dim*dim) - len(agent.revealedCoords) - len(agent.identifiedMineCoords) != 0): #run until all cells are explored
+    while((dim*dim) - len(agent.revealedCoords) - len(agent.identifiedMineCoords) != 0):
         while ((r,c) in agent.revealedCoords or (r,c) in agent.identifiedMineCoords): #pick coordinates again if cell has already been explored
             r = rnd.randint(0,dim-1)
             c = rnd.randint(0,dim-1)
@@ -36,6 +47,16 @@ def strategy2(gboard, dim, agent):
         if (len(inferredSafeSet) > 0): #if a cell is inferred to be safe, reveal it next
             (r, c) = inferredSafeSet.pop()
 
+'''
+Check if any inferences can be made from the Knowledge Base
+If the clue value of an equation is equal to the number of variables in that equation
+    Infer all of those variables to be mine cells.
+    Add the corresponding mine equations to the Knowledge Base
+If the clue value of an equation is 0
+    Infer all of those variables to be safe cells.
+    Add the corresponding safe equations to the Knowledge Base
+'''
+
 def checkForInference(KB, agent, safeSet):
     madeInference = False
     for eq in KB:
@@ -56,6 +77,7 @@ def checkForInference(KB, agent, safeSet):
                 madeInference = True #flag to indicate an inference has been made
     return madeInference
 
+#Driver Code
 '''
 dim = 20
 gb = Board(dim)
