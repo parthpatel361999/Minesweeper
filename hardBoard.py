@@ -2,7 +2,7 @@ from common import Board, Agent, display, findNeighboringCoords
 from strategy2 import strategy2
 import numpy as np
 
-def hardBoard(dim):
+def hardBoard(n,dim):
     gboard = Board(dim)
     gboard.set_mines(dim**2 * 0.4)
     agent = Agent(dim)
@@ -16,15 +16,18 @@ def hardBoard(dim):
 
     length = len(gboard.minelist)
     #print('length of mineList:', length)
-    for mine in gboard.minelist:
-        if gboard.minelist.index(mine) % 10 == 0:
-            print('exploring mine:', gboard.minelist.index(mine), '/', length)
-        neighbors = findVHNeighbors(mine, dim)
-        mineList, worstScore = findWorstAmongNeighbors(neighbors, mineList, mine, dim, worstScore)
-    b = Board(dim)
-    b.set_specific_mines(mineList)
-    print(b.board)
-    print('final score:', worstScore)
+    j = 0
+    while j < n:
+        for mine in mineList:
+            if mineList.index(mine) % 10 == 0:
+                print('exploring mine:', mineList.index(mine), '/', length)
+            neighbors = findVHNeighbors(mine, dim)
+            mineList, worstScore = findWorstAmongNeighbors(neighbors, mineList, mine, dim, worstScore)
+        b = Board(dim)
+        b.set_specific_mines(mineList)
+        print(b.board)
+        print('final score:', worstScore)
+        j += 1
     return firstScore, worstScore
 
 def findVHNeighbors(coords, dim):
@@ -96,7 +99,7 @@ i = 0
 firstscores = []
 lastscores = []
 while (i < 30):
-    x,y = hardBoard(20)
+    x,y = hardBoard(2,10)
     firstscores.append(x)
     lastscores.append(y)
     i += 1
