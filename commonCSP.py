@@ -2,7 +2,12 @@ import sys
 
 from common import Cell
 
+'''
+addEq adds an equation to the Knowledge Base. It first reduces the equation by the Knowledge Base.
+Then it reduces the Knowledge Base by the equation. 
+Then it appends. 
 
+'''
 def addEq(KB, equation):  # add an equation to the KB
     # reduce the new equation by every equation in the KB
     reduceEq(KB, equation)
@@ -11,7 +16,11 @@ def addEq(KB, equation):  # add an equation to the KB
     # reduce every equation in the KB by reduced new equation
     reduceKB(KB, equation)
     KB.append(equation)  # insert the new equation into the KB
+'''
+ReduceKB handles taking the new equation and figuring out if it is a subset.
+Then we construct the set difference and the difference in the constraint values. 
 
+'''
 def reduceKB(KB, newEq):
     modified = [newEq]
     while len(modified) > 0:
@@ -38,6 +47,12 @@ def reduceKB(KB, newEq):
         while([] in KB):
             KB.remove([])
 
+'''
+    ReduceEq reduces an Equation by the entire Knowledge Base. A set difference
+    and constraint value are constructed if there exists a subset between any equation
+    in the knowledge base and the equation we want to add to the Knowledge Base.
+    
+'''
 def reduceEq(KB, newEq):
     for eq in KB:  # for every equation eq in the KB, reduce the new equation by eq
         eqLen = len(eq)
