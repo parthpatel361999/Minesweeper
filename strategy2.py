@@ -44,6 +44,7 @@ def strategy2(gboard, dim, agent, visualization):
                 KB, agent, inferredSafeSet, visualization)
 
         if (len(inferredSafeSet) > 0):  # if a cell is inferred to be safe, reveal it next
+            print("inferred safe at iteration", str(visualization.iteration))
             (r, c) = inferredSafeSet.pop()
 
 
@@ -67,6 +68,8 @@ def checkForInference(KB, agent, safeSet, visualization):
                 if (agent.board[r][c].type != Cell.MINE):
                     # identify the cell as an inferred mine
                     agent.identifyMine((r, c))
+                    print("inferred mine at iteration",
+                          str(visualization.iteration))
                     visualization.createVisualization()
                     # add the equation [(r, c) = 1] into the KB
                     addEq(KB, [var, 1])
