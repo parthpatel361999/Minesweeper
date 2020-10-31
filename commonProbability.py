@@ -1,5 +1,11 @@
 from commonCSP import addEq, indexToTuple, tupleToIndex
+'''
 
+Checks to see if a piece of information has been exhausted. 
+This also means checking to see if it is not present in 
+any of the remaining equations on KB.
+
+'''
 def thinKB(KB, variables, agent):
     thinnedKB = []
     for eq in KB:
@@ -77,14 +83,25 @@ def createVariableGraph(KB, variables):
         relevantKBs.append(relevantKB)
     return variableGraph, relevantKBs
 
-
+''' 
+Make a Copy of KB
+'''
 def copyKB(KB):
     newKB = []
     for eq in KB:
         newKB.append(eq.copy())
     return newKB
 
-
+'''
+We check to find Valid configurations of the variables in the KB.
+This essentially takes the form of a "what-if?" scenario. Based on 
+any amount of variables, we explore different combinations of mines
+and safe cells and check to make sure that they satisfy the knowledge
+base. 
+1) check for inferences with simulated mines
+2) see if they are valid
+3) s
+'''
 def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
     if len(variables) < 1:
         return 0
