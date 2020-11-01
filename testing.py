@@ -5,14 +5,15 @@ from strategy2 import strategy2
 from strategy1 import strategy1
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
-def testStrategy():
+def testStrategy(strat):
     dim = 10 # start value for dim, up to 50 hopefully
     mineDensity = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9] # start value for mineDensity, up to 0.7
     plotDict = {}
 
     biglist = []
-    while dim <= 50: #change to 50
+    while dim <= 10: #change to 50
         print('dim= ', dim)
         averages = []
         for m in mineDensity:
@@ -22,7 +23,14 @@ def testStrategy():
                 gb.set_mines((dim**2)*m)
                 corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
                 ag = Agent(dim=dim, preferredCoords=corners)
-                strategy4(gb, dim, ag)
+                if(strat == 1):
+                    strategy1(gb, dim, ag)
+                elif(strat == 2):
+                    strategy2(gb, dim, ag)
+                elif(strat == 3):
+                    strategy3(gb, dim, ag)
+                elif(strat == 4):
+                    strategy4(gb, dim, ag)
                 result = display(dim, ag)
                 #print('result:', result)
                 successRate.append(result)
@@ -41,10 +49,10 @@ def testStrategy():
             plt.text(mineDensity[j], biglist[i][j], '('+'%.1f' % mineDensity[j]+', '+'%.3f'%biglist[i][j]+')', size='x-small', in_layout=True, snap=True)
             #plt.annotate(text='('+'%.1f' % mineDensity[j]+', '+'%.3f'%biglist[i][j]+')', xy=(mineDensity[j], biglist[i][j]))
         plt.plot(mineDensity, biglist[i])
-        plt.title('Strategy 4 with Board of Dimension {}'.format(dim))
+        plt.title('Boards of Dimension {}'.format(dim))
         plt.xlabel('Mine Density')
         plt.ylabel('Average Final Score')
-        plt.savefig('Strat4_Dimension {}.png'.format(dim))
+        plt.show('Dimension {}.png'.format(dim))
         dim += 10
 
     plt.figure(figsize=(10,10))
@@ -55,18 +63,7 @@ def testStrategy():
     plt.plot(mineDensity, biglist[3], label='Dimension 40')
     plt.plot(mineDensity, biglist[4], label='Dimension 50')
     plt.legend(loc='best')
-    plt.savefig('Strat4_Overlaid Graphs.png')
+    plt.show('Overlaid Graphs.png')
 
-    # f, ax = plt.subplots(5,1, figsize=(15,15))
-    # dim = 10
-    # for i in range(0, 5):
-    #     ax[i].plot(mineDensity, biglist[i])
-    #     ax[i].set_title('Board with Dimension {}'.format(dim))
-    #     ax[i].set_xlabel('Mine Density')
-    #     ax[i].set_ylabel('Average Final Score')
-    #     dim += 10
-    # f.savefig('test.png', bbox_inches="tight")
-    # f.show()
     print(biglist)
-testStrategy()
-    
+testStrategy(int(sys.argv[1]))
