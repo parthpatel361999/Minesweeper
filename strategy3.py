@@ -3,7 +3,7 @@ import time
 
 from common import Agent, Board, Cell, findNeighboringCoords, display
 from commonCSP import addEq, indexToTuple, tupleToIndex
-from commonProbability import thinKB
+from commonProbability import thinKB, configIsValid, createVariableGraph
 
 
 # double improved agent
@@ -146,37 +146,6 @@ def calculateVariableProbabilities(KB, variables, dim):
         variables.append(variable)
     return safeVariables, mineVariables
 
-
-def createVariableGraph(KB, variables):
-    variableGraph = []
-    relevantKBs = []
-    while len(variables) > 0:
-        node = variables[0]
-        visited = set()
-        queue = [node]
-        connectedComponent = []
-        relevantKB = []
-        while len(queue) > 0:
-            checkNode = queue.pop(0)
-            visited.add(checkNode)
-            connectedComponent.append(checkNode)
-            variables.remove(checkNode)
-            neighbors = []
-            for eq in KB:
-                if eq not in relevantKB and checkNode in eq[0:len(eq) - 1]:
-                    for var in eq[0:len(eq) - 1]:
-                        if var != checkNode:
-                            neighbors.append(var)
-                    relevantKB.append(eq)
-            for neighbor in neighbors:
-                if neighbor not in visited and neighbor in variables:
-                    queue.append(neighbor)
-                    visited.add(neighbor)
-        variableGraph.append(connectedComponent)
-        relevantKBs.append(relevantKB)
-    return variableGraph, relevantKBs
-
-
 def copyKB(KB):
     newKB = []
     for eq in KB:
@@ -251,9 +220,16 @@ def checkForInferences(KB, variables, mineVariables):
         addEq(KB,  eq)
     return madeInference
 
+dim = 40
+gb = Board(dim)
+#gb.set_mines(40)
+gb.set_mines(dim**2 * 0.4)
 
-def configIsValid(KB):
-    for eq in KB:
-        if len(eq) - 1 < eq[-1] or eq[-1] < 0:
-            return False
-    return True
+print(gb.board)
+
+ag = Agent(dim)
+startTime = time.time()
+strategy3(gb,dim,ag)
+endTime = time.time()
+display(dim,ag)
+print("Time taken: " + str(endTime - startTime))
