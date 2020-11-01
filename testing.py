@@ -13,7 +13,8 @@ def testStrategy(strat):
     plotDict = {}
 
     biglist = []
-    while dim <= 10: #change to 50
+    i = 0
+    while dim <= 50: #change to 50
         print('dim= ', dim)
         averages = []
         for m in mineDensity:
@@ -37,33 +38,20 @@ def testStrategy(strat):
             successRate = np.asarray(successRate)
             averages.append(np.average(successRate))
         print(averages)
-        biglist.append(averages)
-        dim += 10
 
-    dim = 10 
-    for i in range(0,5): # change to 5
-        plt.figure(figsize=(12,12))
+        fig = plt.figure(figsize=(12,12))
         plt.ylim(0,1)
-        plt.scatter(mineDensity,biglist[i],c='#1f77b4', s=10)
+        plt.scatter(mineDensity,averages,c='#1f77b4', s=10)
         for j in range(len(mineDensity)):
-            plt.text(mineDensity[j], biglist[i][j], '('+'%.1f' % mineDensity[j]+', '+'%.3f'%biglist[i][j]+')', size='x-small', in_layout=True, snap=True)
+            plt.text(mineDensity[j], averages[j], '('+'%.1f' % mineDensity[j]+', '+'%.3f'%averages[j]+')', size='x-small', in_layout=True, snap=True)
             #plt.annotate(text='('+'%.1f' % mineDensity[j]+', '+'%.3f'%biglist[i][j]+')', xy=(mineDensity[j], biglist[i][j]))
-        plt.plot(mineDensity, biglist[i])
+        plt.plot(mineDensity, averages)
         plt.title('Boards of Dimension {}'.format(dim))
         plt.xlabel('Mine Density')
         plt.ylabel('Average Final Score')
-        plt.show('Dimension {}.png'.format(dim))
+        plt.show()
+        plt.close(fig)
+        i += 1
         dim += 10
 
-    plt.figure(figsize=(10,10))
-    plt.ylim(0,1)
-    plt.plot(mineDensity, biglist[0], label='Dimension 10')
-    plt.plot(mineDensity, biglist[1], label='Dimension 20')
-    plt.plot(mineDensity, biglist[2], label='Dimension 30')
-    plt.plot(mineDensity, biglist[3], label='Dimension 40')
-    plt.plot(mineDensity, biglist[4], label='Dimension 50')
-    plt.legend(loc='best')
-    plt.show('Overlaid Graphs.png')
-
-    print(biglist)
 testStrategy(int(sys.argv[1]))

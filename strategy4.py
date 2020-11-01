@@ -212,27 +212,27 @@ def display(dim, agent, gb):
     print("total explored:", str(numTripped + numIdentifiedMines + numRevealed))
 
 
-# # i = 0
+# # # i = 0
 
-dim = 100
+# dim = 100
 
-# # # while i < 20:
+# # # # while i < 20:
 
-gb = Board(dim)
-gb.set_mines(int(dim**2 * 0.4))
+# gb = Board(dim)
+# gb.set_mines(int(dim**2 * 0.4))
 
-# # #print("Strat 3")
-# # #print(gb.board)
-corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
-ag = Agent(dim=dim, preferredCoords=corners)
-startTime = time.time()
-strategy4(gb, dim, ag)
+# # # #print("Strat 3")
+# # # #print(gb.board)
+# corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
+# ag = Agent(dim=dim, preferredCoords=corners)
+# startTime = time.time()
+# strategy4(gb, dim, ag)
 
-print("Display")
-print(gb.board)
-display(dim, ag, gb)
-endTime = time.time()
-print("Time:", endTime - startTime,
-        "seconds (" + str((endTime - startTime)/60), "min)")
-# print(i)
-# i += 1
+# print("Display")
+# print(gb.board)
+# display(dim, ag, gb)
+# endTime = time.time()
+# print("Time:", endTime - startTime,
+#         "seconds (" + str((endTime - startTime)/60), "min)")
+# # print(i)
+# # i += 1
