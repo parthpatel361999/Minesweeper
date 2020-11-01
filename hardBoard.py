@@ -95,13 +95,13 @@ def findWorstAmongNeighbors(locations, mineList, currentMine, dim, worstScore):
 
     return mineList.copy(), worstScore # gonna have to change the list
 
-i = 0
-firstscores = []
-lastscores = []
-while (i < 30):
-    x,y = hardBoard(2,10)
-    firstscores.append(x)
-    lastscores.append(y)
-    i += 1
-print('First Score Average:', np.average(np.asarray(firstscores)))
-print('Final Score Average:', np.average(np.asarray(lastscores)))
+# i = 0
+# firstscores = []
+# lastscores = []
+# while (i < 30):
+#     x,y = hardBoard(2,10)
+#     firstscores.append(x)
+#     lastscores.append(y)
+#     i += 1
+# print('First Score Average:', np.average(np.asarray(firstscores)))
+# print('Final Score Average:', np.average(np.asarray(lastscores)))
