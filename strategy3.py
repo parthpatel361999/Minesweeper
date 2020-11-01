@@ -219,17 +219,3 @@ def checkForInferences(KB, variables, mineVariables):
     for eq in eqsToAdd:
         addEq(KB,  eq)
     return madeInference
-
-dim = 40
-gb = Board(dim)
-#gb.set_mines(40)
-gb.set_mines(dim**2 * 0.4)
-
-print(gb.board)
-
-ag = Agent(dim)
-startTime = time.time()
-strategy3(gb,dim,ag)
-endTime = time.time()
-display(dim,ag)
-print("Time taken: " + str(endTime - startTime))
