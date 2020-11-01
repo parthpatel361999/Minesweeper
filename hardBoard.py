@@ -12,21 +12,21 @@ def hardBoard(n,dim):
     strategy2(gboard,dim, agent)
     worstScore = display(dim, agent)
     firstScore = worstScore
-    print('first score:', firstScore)
+    #print('first score:', firstScore)
 
     length = len(gboard.minelist)
     #print('length of mineList:', length)
     j = 0
     while j < n:
         for mine in mineList:
-            if mineList.index(mine) % 10 == 0:
-                print('exploring mine:', mineList.index(mine), '/', length)
+            # if mineList.index(mine) % 10 == 0:
+            #     print('exploring mine:', mineList.index(mine), '/', length)
             neighbors = findVHNeighbors(mine, dim)
             mineList, worstScore = findWorstAmongNeighbors(neighbors, mineList, mine, dim, worstScore)
         b = Board(dim)
         b.set_specific_mines(mineList)
-        print(b.board)
-        print('final score:', worstScore)
+        #print(b.board)
+        #print('final score:', worstScore)
         j += 1
     return firstScore, worstScore
 
