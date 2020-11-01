@@ -1,12 +1,12 @@
 import random as rnd
 import time
 
-from common import Agent, Board, Cell, display, findNeighboringCoords
+from common import Agent, Board, Cell, findNeighboringCoords, display
 from commonCSP import addEq, indexToTuple, tupleToIndex
-from commonProbability import (addMineEq, addSafeEq, configIsValid, copyKB,
-                               createVariableGraph, findValidConfigs, thinKB)
+from commonProbability import thinKB
 
 
+# double improved agent
 def strategy3(gboard, dim, agent):
     """
     Declare a list for the knowledge base, which will be filled with equations (represented as lists 
@@ -26,11 +26,13 @@ def strategy3(gboard, dim, agent):
         Check the current cell. Based on the type of the mine, add the respective equations and variables.
         """
 
+        # print(r, c, "or", tupleToIndex(r, c, dim))
         currentCell = agent.checkCell((r, c), gboard)
         if currentCell.type == Cell.MINE:
             addMineEq(KB, currentCell, dim)
         else:
             addSafeEq(KB, currentCell, dim, agent, variables)
+        # print("variables:", str(len(variables)))
 
         """
         If there are no unknown variables in the knowledge base, choose one of the preferred coordinates.
@@ -47,13 +49,7 @@ def strategy3(gboard, dim, agent):
             Calculate the probabilities for all variables, and find the variables that are guaranteed to
             be safe and those that are guaranteed to be mines. For such variables, remove them from the
             unknown variables set and check or identify the corresponding coordinates. Add the respective
-            equations and variables. 
-
-            After adding all the equations and checking/identifying the coordinates corresponding to each 
-            inferred variable, recalculate the probabilities for all remaining variables. Repeat until there
-            are no inferences to be drawn.
-
-            Then, if there is a cell that is least likely to be a mine, set its
+            equations and variables. Then, if there is a cell that is least likely to be a mine, set its
             coordinates as the next to be explored; else, choose from the preferred coordinates (or
             random coordinates, if necessary).
             """
@@ -84,28 +80,48 @@ def strategy3(gboard, dim, agent):
             elif not agent.isFinished():
                 r, c = agent.choosePreferredOrRandomCoords()
 
+def addSafeEq(KB, cell, dim, agent, variables):
+    """
+    Add an equation identifying the cell's coordinates as safe to the knowledge base. Then, create a clue 
+    equation for all of the cell's neighbors, and add those neighbors to the unknown variables list if
+    they haven't been explored by the agent already.
+    """
+    r, c = cell.coords
+    safeEq = [tupleToIndex(r, c, dim), 0]
+    addEq(KB, safeEq)
+    clueEq = []
+    for neighbor in cell.neighbors:
+        nRow, nCol = neighbor
+        neighborIndex = tupleToIndex(nRow, nCol, dim)
+        clueEq.append(neighborIndex)
+        if not agent.hasExplored(neighbor) and neighborIndex not in variables:
+            variables.append(neighborIndex)
+    clueEq.append(cell.type)
+    addEq(KB, clueEq)
+
+
+def addMineEq(KB, cell, dim):
+    """
+    Add an equation identifying the cell's coordinates as a mine to the knowledge base. 
+    """
+    r, c = cell.coords
+    mineEq = [tupleToIndex(r, c, dim), 1]
+    addEq(KB, mineEq)
+
 
 def calculateVariableProbabilities(KB, variables, dim):
-    """
-    Initialize a dictionary to track in how many valid configurations a cell is represented
-    as a mine.
-    """
+    # print("KB size:", str(len(KB)))
     mineCounts = {}
     for variable in variables:
         mineCounts[variable] = 0
-
-    """  
-    Create a list for the connected components of the variables and another list for each
-    of their relevant KBs.
-    """
     variableGraph, relevantKBs = createVariableGraph(
         KB, variables.copy())
-
-    """
-    For each connected component, generate the valid configurations of the board and increment
-    a specific variable's mine count value whenever it shows up in a valid configuration
-    as a mine.
-    """
+    # print("components:", len(variableGraph))
+    maxSize = 0
+    for component in variableGraph:
+        if len(component) > maxSize:
+            maxSize = len(component)
+    # print("component max size:", maxSize)
     safeVariables = []
     mineVariables = []
     variableProbabilities = []
@@ -115,22 +131,11 @@ def calculateVariableProbabilities(KB, variables, dim):
         validConfigurations = findValidConfigs(
             relevantKB, connectedVariables.copy(), set(), mineCounts)
         for variable in connectedVariables:
-            """
-            If a variable is mine the same number of times as the number of valid configurations,
-            it must be a mine.
-            """
-            if mineCounts[variable] == validConfigurations:
-                mineVariables.append(variable)
-            elif mineCounts[variable] == 0:
-                """
-                If a variable is never a mine in any of the valid configurations, it must be safe.                
-                """
+            if mineCounts[variable] == 0:
                 safeVariables.append(variable)
+            elif mineCounts[variable] == validConfigurations:
+                mineVariables.append(variable)
             else:
-                """
-                Calculate the probability for this variable, and append it to a list to be sorted
-                by mine probability later.
-                """
                 mineProb = float(mineCounts[variable]) / \
                     float(validConfigurations)
                 variableProbabilities.append((mineProb, variable))
@@ -140,3 +145,115 @@ def calculateVariableProbabilities(KB, variables, dim):
         probability, variable = probVar
         variables.append(variable)
     return safeVariables, mineVariables
+
+
+def createVariableGraph(KB, variables):
+    variableGraph = []
+    relevantKBs = []
+    while len(variables) > 0:
+        node = variables[0]
+        visited = set()
+        queue = [node]
+        connectedComponent = []
+        relevantKB = []
+        while len(queue) > 0:
+            checkNode = queue.pop(0)
+            visited.add(checkNode)
+            connectedComponent.append(checkNode)
+            variables.remove(checkNode)
+            neighbors = []
+            for eq in KB:
+                if eq not in relevantKB and checkNode in eq[0:len(eq) - 1]:
+                    for var in eq[0:len(eq) - 1]:
+                        if var != checkNode:
+                            neighbors.append(var)
+                    relevantKB.append(eq)
+            for neighbor in neighbors:
+                if neighbor not in visited and neighbor in variables:
+                    queue.append(neighbor)
+                    visited.add(neighbor)
+        variableGraph.append(connectedComponent)
+        relevantKBs.append(relevantKB)
+    return variableGraph, relevantKBs
+
+
+def copyKB(KB):
+    newKB = []
+    for eq in KB:
+        newKB.append(eq.copy())
+    return newKB
+
+
+def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
+    if len(variables) < 1:
+        return 0
+
+    validConfigs = 0
+
+    madeInference = checkForInferences(KB, variables, simulatedMineVariables)
+    while madeInference:
+        madeInference = checkForInferences(
+            KB, variables, simulatedMineVariables)
+
+    if len(variables) == 0:
+        validConfigs += 1
+        for mineVar in simulatedMineVariables:
+            mineCounts[mineVar] += 1
+    else:
+        variable = variables[0]
+        safeEq = [variable, 0]
+        safeKB = copyKB(KB)
+        addEq(safeKB, safeEq)
+        safeConfigIsValid = configIsValid(safeKB)
+        if len(variables) == 1 and safeConfigIsValid:
+            validConfigs += 1
+            for mineVar in simulatedMineVariables:
+                mineCounts[mineVar] += 1
+        elif safeConfigIsValid:
+            validConfigs += findValidConfigs(
+                safeKB, variables[1:], simulatedMineVariables.copy(), mineCounts)
+        mineEq = [variable, 1]
+        mineKB = copyKB(KB)
+        addEq(mineKB, mineEq)
+        simulatedMineVariables.add(variable)
+        mineConfigIsValid = configIsValid(mineKB)
+        if len(variables) == 1 and mineConfigIsValid:
+            validConfigs += 1
+            for mineVar in simulatedMineVariables:
+                mineCounts[mineVar] += 1
+        elif mineConfigIsValid:
+            validConfigs += findValidConfigs(
+                mineKB, variables[1:], simulatedMineVariables.copy(), mineCounts)
+
+    return validConfigs
+
+
+def checkForInferences(KB, variables, mineVariables):
+    madeInference = False
+    eqsToAdd = []
+    for eq in KB:
+        if len(eq) - 1 == eq[-1]:
+            for var in eq[0:len(eq) - 1]:
+                if var in variables:
+                    variables.remove(var)
+                    mineVariables.add(var)
+                    mineEq = [var, 1]
+                    eqsToAdd.append(mineEq)
+                    madeInference = True
+        elif eq[-1] == 0:
+            for var in eq[0:len(eq) - 1]:
+                if var in variables:
+                    variables.remove(var)
+                    safeEq = [var, 0]
+                    eqsToAdd.append(safeEq)
+                    madeInference = True
+    for eq in eqsToAdd:
+        addEq(KB,  eq)
+    return madeInference
+
+
+def configIsValid(KB):
+    for eq in KB:
+        if len(eq) - 1 < eq[-1] or eq[-1] < 0:
+            return False
+    return True
