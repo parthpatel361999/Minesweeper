@@ -11,6 +11,7 @@ class Board:
         self.board = np.zeros([dim, dim], dtype=int)
         self.dim = dim
         self.num_mines = 0
+        self.minelist = []
 
     #randomly place num_mines mines in the board
     def set_mines(self, num_mines):
@@ -22,6 +23,7 @@ class Board:
             col = pos % self.dim
             if self.board[row][col] != Cell.MINE:
                 self.board[row][col] = Cell.MINE
+                self.minelist.append((row, col))
                 #for each mine placed, increment the neighbors clue value by 1.
                 neighbors = findNeighboringCoords((row, col), self.dim)
                 for n in neighbors:
@@ -30,6 +32,21 @@ class Board:
                         self.board[nrow, ncol] += 1
                 count += 1
     
+    def set_specific_mines(self, locations):
+        count = 0
+        self.num_mines = len(locations)
+        for (row, col) in locations:
+            if self.board[row][col] != Cell.MINE:
+                self.board[row][col] = Cell.MINE
+                self.minelist.append((row, col))
+                # update neighbors here
+                neighbors = findNeighboringCoords((row, col), self.dim)
+                for n in neighbors:
+                    nrow, ncol = n
+                    if self.board[nrow][ncol] != Cell.MINE:
+                        self.board[nrow, ncol] += 1
+                count += 1
+
     def isSolved(self, num_discovered):
         return num_discovered == self.num_mines
 
