@@ -1,11 +1,12 @@
 import random as rnd
 import time
 
-from common import Agent, Board, Cell, findNeighboringCoords, display
+from common import Agent, Board, Cell, display, findNeighboringCoords
 from commonCSP import addEq, indexToTuple, tupleToIndex
-from commonProbability import thinKB, addSafeEq, addMineEq, createVariableGraph, copyKB, findValidConfigs, configIsValid
+from commonProbability import (addMineEq, addSafeEq, configIsValid, copyKB,
+                               createVariableGraph, findValidConfigs, thinKB)
 
-# double improved agent
+
 def strategy3(gboard, dim, agent):
     """
     Declare a list for the knowledge base, which will be filled with equations (represented as lists 
@@ -25,13 +26,11 @@ def strategy3(gboard, dim, agent):
         Check the current cell. Based on the type of the mine, add the respective equations and variables.
         """
 
-        # print(r, c, "or", tupleToIndex(r, c, dim))
         currentCell = agent.checkCell((r, c), gboard)
         if currentCell.type == Cell.MINE:
             addMineEq(KB, currentCell, dim)
         else:
             addSafeEq(KB, currentCell, dim, agent, variables)
-        # print("variables:", str(len(variables)))
 
         """
         If there are no unknown variables in the knowledge base, choose one of the preferred coordinates.
@@ -48,7 +47,13 @@ def strategy3(gboard, dim, agent):
             Calculate the probabilities for all variables, and find the variables that are guaranteed to
             be safe and those that are guaranteed to be mines. For such variables, remove them from the
             unknown variables set and check or identify the corresponding coordinates. Add the respective
-            equations and variables. Then, if there is a cell that is least likely to be a mine, set its
+            equations and variables. 
+
+            After adding all the equations and checking/identifying the coordinates corresponding to each 
+            inferred variable, recalculate the probabilities for all remaining variables. Repeat until there
+            are no inferences to be drawn.
+
+            Then, if there is a cell that is least likely to be a mine, set its
             coordinates as the next to be explored; else, choose from the preferred coordinates (or
             random coordinates, if necessary).
             """
@@ -78,26 +83,29 @@ def strategy3(gboard, dim, agent):
                 variables.remove(variables[0])
             elif not agent.isFinished():
                 r, c = agent.choosePreferredOrRandomCoords()
-'''
-calculateVariableProbabilities is a function that creates connected
-graphs between the cell and its neighbors. It also generates valid
-configurations of the different mine placements, and then calculates the
-probability of a cell being a mine. 
 
-'''
+
 def calculateVariableProbabilities(KB, variables, dim):
-    # print("KB size:", str(len(KB)))
+    """
+    Initialize a dictionary to track in how many valid configurations a cell is represented
+    as a mine.
+    """
     mineCounts = {}
     for variable in variables:
         mineCounts[variable] = 0
+
+    """  
+    Create a list for the connected components of the variables and another list for each
+    of their relevant KBs.
+    """
     variableGraph, relevantKBs = createVariableGraph(
         KB, variables.copy())
-    # print("components:", len(variableGraph))
-    maxSize = 0
-    for component in variableGraph:
-        if len(component) > maxSize:
-            maxSize = len(component)
-    # print("component max size:", maxSize)
+
+    """
+    For each connected component, generate the valid configurations of the board and increment
+    a specific variable's mine count value whenever it shows up in a valid configuration
+    as a mine.
+    """
     safeVariables = []
     mineVariables = []
     variableProbabilities = []
@@ -107,11 +115,22 @@ def calculateVariableProbabilities(KB, variables, dim):
         validConfigurations = findValidConfigs(
             relevantKB, connectedVariables.copy(), set(), mineCounts)
         for variable in connectedVariables:
-            if mineCounts[variable] == 0:
-                safeVariables.append(variable)
-            elif mineCounts[variable] == validConfigurations:
+            """
+            If a variable is mine the same number of times as the number of valid configurations,
+            it must be a mine.
+            """
+            if mineCounts[variable] == validConfigurations:
                 mineVariables.append(variable)
+            elif mineCounts[variable] == 0:
+                """
+                If a variable is never a mine in any of the valid configurations, it must be safe.                
+                """
+                safeVariables.append(variable)
             else:
+                """
+                Calculate the probability for this variable, and append it to a list to be sorted
+                by mine probability later.
+                """
                 mineProb = float(mineCounts[variable]) / \
                     float(validConfigurations)
                 variableProbabilities.append((mineProb, variable))
@@ -121,52 +140,3 @@ def calculateVariableProbabilities(KB, variables, dim):
         probability, variable = probVar
         variables.append(variable)
     return safeVariables, mineVariables
-'''
-checkForInferences checks the Knowledge Base to see if 
-any of the equations have reduced such that they can all 
-be determined to be mines or to be safe. If it makes one
-inference, it continues to make inferences until all 
-possible interpretations have been made. 
-
-'''
-def checkForInferences(KB, variables, mineVariables):
-    madeInference = False
-    eqsToAdd = []
-    for eq in KB:
-        if len(eq) - 1 == eq[-1]:
-            for var in eq[0:len(eq) - 1]:
-                if var in variables:
-                    variables.remove(var)
-                    mineVariables.add(var)
-                    mineEq = [var, 1]
-                    eqsToAdd.append(mineEq)
-                    madeInference = True
-        elif eq[-1] == 0:
-            for var in eq[0:len(eq) - 1]:
-                if var in variables:
-                    variables.remove(var)
-                    safeEq = [var, 0]
-                    eqsToAdd.append(safeEq)
-                    madeInference = True
-    for eq in eqsToAdd:
-        addEq(KB,  eq)
-    return madeInference
-
-'''
-dim = 30
-
-gb = Board(dim)
-gb.set_mines(int(dim**2 * 0.4))
-
-print(gb.board)
-corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
-ag = Agent(dim=dim, preferredCoords=corners)
-startTime = time.time()
-strategy3(gb, dim, ag)
-
-print(gb.board)
-display(dim, ag)
-endTime = time.time()
-print("Time:", endTime - startTime,
-        "seconds (" + str((endTime - startTime)/60), "min)")
-'''

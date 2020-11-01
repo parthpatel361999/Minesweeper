@@ -1,12 +1,14 @@
 from commonCSP import addEq, indexToTuple, tupleToIndex
-'''
 
-Checks to see if a piece of information has been exhausted. 
-This also means checking to see if it is not present in 
-any of the remaining equations on KB.
 
-'''
 def thinKB(KB, variables, agent):
+    """
+    If an equation is of length 2, then it is an assignment for a variable. If
+    all of the neighbors of the cell corresponding to the variable have been
+    explored, then this equation is no longer needed as all information it can
+    provide has been exhausted. Therefore, it can be removed from the knowledge
+    base.  
+    """
     thinnedKB = []
     for eq in KB:
         if len(eq) == 2:
@@ -57,6 +59,10 @@ def addMineEq(KB, cell, dim):
 def createVariableGraph(KB, variables):
     variableGraph = []
     relevantKBs = []
+    """
+    Run a basic BFS on the variables and generate all connected components. The only special aspect of
+    this BFS is the neighbor calculation.
+    """
     while len(variables) > 0:
         node = variables[0]
         visited = set()
@@ -68,6 +74,11 @@ def createVariableGraph(KB, variables):
             visited.add(checkNode)
             connectedComponent.append(checkNode)
             variables.remove(checkNode)
+            """
+            Calculate the neighbors for this variable. If this variable exists in an equation that
+            does not already exist in the relevant knowledge base, add all other variables of that
+            equation to the neighbors list.
+            """
             neighbors = []
             for eq in KB:
                 if eq not in relevantKB and checkNode in eq[0:len(eq) - 1]:
@@ -83,30 +94,30 @@ def createVariableGraph(KB, variables):
         relevantKBs.append(relevantKB)
     return variableGraph, relevantKBs
 
-''' 
-Make a Copy of KB
-'''
+
 def copyKB(KB):
+    """
+    Create a copy of the knowledge base.
+    """
     newKB = []
     for eq in KB:
         newKB.append(eq.copy())
     return newKB
 
-'''
-We check to find Valid configurations of the variables in the KB.
-This essentially takes the form of a "what-if?" scenario. Based on 
-any amount of variables, we explore different combinations of mines
-and safe cells and check to make sure that they satisfy the knowledge
-base. 
-1) check for inferences with simulated mines
-2) see if they are valid
-3) s
-'''
+
 def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
     if len(variables) < 1:
         return 0
 
     validConfigs = 0
+
+    """
+    Prune the search tree. Check if any inferences can be made in the knowledge base about
+    any of the variables still to be explored based on variable assignments that have been
+    made so far. If yes, add those inferences to this knowledge base so that fewer
+    combinations of the variables' values need to be considered, decreasing the number of
+    branches to be explored. 
+    """
 
     madeInference = checkForInferencesTrackingMines(
         KB, variables, simulatedMineVariables)
@@ -114,11 +125,25 @@ def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
         madeInference = checkForInferencesTrackingMines(
             KB, variables, simulatedMineVariables)
 
+    """
+    If a leaf node has been reached, check which variables were simulated to be mines and
+    increment their mine counts in the given dictionary.
+    """
     if len(variables) == 0:
         validConfigs += 1
         for mineVar in simulatedMineVariables:
             mineCounts[mineVar] += 1
     else:
+        """
+        Pick the first variable from the variables list. Simulate this variable being a safe
+        cell first by adding a "safe equation" for this variable to a copy of the knowledge
+        base. If the new configuration is valid and a leaf node has been reached, conduct the
+        "leaf node" process as described in the previous comment. Else, recurse with this copied
+        knowledge base and the variables list without this variable.
+
+        If this simulated configuration is not valid, we do not explore the branch further, thus
+        pruning this branch.
+        """
         variable = variables[0]
         safeEq = [variable, 0]
         safeKB = copyKB(KB)
@@ -131,6 +156,16 @@ def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
         elif safeConfigIsValid:
             validConfigs += findValidConfigs(
                 safeKB, variables[1:], simulatedMineVariables.copy(), mineCounts)
+        """
+        Using the same variable, simulate this variable being a mine by adding a "mine equation"
+        for this variable to a copy of the knowledge base. Add this variable to the simulated mine
+        list. If the new configuration is valid and a leaf node has been reached, conduct the
+        "leaf node" process as described in the second-to-last comment. Else, recurse with this
+        copied knowledge base and the variables list without this variable.
+
+        If this simulated configuration is not valid, we do not explore the branch further, thus
+        pruning this branch.
+        """
         mineEq = [variable, 1]
         mineKB = copyKB(KB)
         addEq(mineKB, mineEq)
@@ -144,6 +179,9 @@ def findValidConfigs(KB, variables, simulatedMineVariables, mineCounts):
             validConfigs += findValidConfigs(
                 mineKB, variables[1:], simulatedMineVariables.copy(), mineCounts)
 
+    """
+    Return the number of valid configurations.
+    """
     return validConfigs
 
 
@@ -151,6 +189,10 @@ def checkForInferencesTrackingMines(KB, variables, mineVariables):
     madeInference = False
     eqsToAdd = []
     for eq in KB:
+        """
+        If a variable is mine the same number of times as the number of valid configurations,
+        it must be a mine.
+        """
         if len(eq) - 1 == eq[-1]:
             for var in eq[0:len(eq) - 1]:
                 if var in variables:
@@ -160,18 +202,31 @@ def checkForInferencesTrackingMines(KB, variables, mineVariables):
                     eqsToAdd.append(mineEq)
                     madeInference = True
         elif eq[-1] == 0:
+            """
+            Generate the probability of this variable being a mine. If the probability is less
+            than 1/8, infer the variable to be safe. Otherwise, append it to a list to be sorted
+            by mine probability later.
+            """
             for var in eq[0:len(eq) - 1]:
                 if var in variables:
                     variables.remove(var)
                     safeEq = [var, 0]
                     eqsToAdd.append(safeEq)
                     madeInference = True
+    """
+    Add all new equations to the knowledge base.
+    """
     for eq in eqsToAdd:
         addEq(KB,  eq)
     return madeInference
 
 
 def configIsValid(KB):
+    """
+    The knowledge base is not valid if:
+        a. The clue of the equation exceeds the number of variables in the equation.
+        b. The clue of the equation is less than 0.
+    """
     for eq in KB:
         if len(eq) - 1 < eq[-1] or eq[-1] < 0:
             return False
