@@ -50,18 +50,3 @@ def strategy1(gboard,dim,agent):
         agent.checkCell((r,c),gboard)
         identify_mine_neighbors(agent,gboard,(r,c))
         identify_safe_neighbors(agent,gboard,(r,c))
-
-#Driver Code
-'''
-dim = 50
-gb = Board(dim)
-gb.set_mines(int(0.4*dim**2))
-print(gb.board)
-ag = Agent(dim)
-startTime = time.time()
-strategy1(gb,dim,ag)
-display(dim,ag)
-endTime = time.time()
-print("Time:", endTime - startTime,
-        "seconds (" + str((endTime - startTime)/60), "min)")
-'''

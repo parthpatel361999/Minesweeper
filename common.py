@@ -161,8 +161,9 @@ def display(dim,agent):
                 display.board[i][j] = '9'
             else:
                 continue
-    print(display.board)
-    print("Tripped Mines: " + str(len(agent.trippedMineCoords)))
-    print("Identified Mines: " + str(len(agent.identifiedMineCoords)))
-    print("Revealed Cells: " + str(len(agent.revealedCoords)))
-    print("Identified Mines/Total Mines: " + str(len(agent.identifiedMineCoords) / (len(agent.trippedMineCoords) + len(agent.identifiedMineCoords))))
+    # print(display.board)
+    # print("Tripped Mines: " + str(len(agent.trippedMineCoords)))
+    # print("Identified Mines: " + str(len(agent.identifiedMineCoords)))
+    # print("Revealed Cells: " + str(len(agent.revealedCoords)))
+    # print("Identified Mines/Total Mines: " + str(len(agent.identifiedMineCoords) / (len(agent.trippedMineCoords) + len(agent.identifiedMineCoords))))
+    return float(len(agent.identifiedMineCoords)) / float(len(agent.trippedMineCoords) + len(agent.identifiedMineCoords))

@@ -86,18 +86,3 @@ def checkForInference(KB, agent, safeSet):
                 safeSet.add((r, c))
                 madeInference = True #flag to indicate an inference has been made
     return madeInference
-
-#Driver Code
-'''
-dim = 20
-gb = Board(dim)
-gb.set_mines(int(dim**2 * 0.4))
-print(gb.board)
-ag = Agent(dim)
-startTime = time.time()
-strategy2(gb,dim,ag)
-display(dim,ag)
-endTime = time.time()
-print("Time:", endTime - startTime,
-        "seconds (" + str((endTime - startTime)/60), "min)")
-'''

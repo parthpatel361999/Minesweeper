@@ -219,3 +219,24 @@ def calculateVariableProbabilities(KB, variables, dim):
         probability, variable = probVar
         variables.append(variable)
     return safeVariables, mineVariables
+
+i = 0
+
+dim = 10
+
+gb = Board(dim)
+gb.set_mines(int(dim**2 * 0.4))
+
+print(gb.board)
+corners = [(0, 0), (0, dim - 1), (dim - 1, 0), (dim - 1, dim - 1)]
+ag = Agent(dim=dim, preferredCoords=corners)
+startTime = time.time()
+strategy4(gb, dim, ag)
+
+print(gb.board)
+display(dim, ag)
+endTime = time.time()
+print("Time:", endTime - startTime,
+        "seconds (" + str((endTime - startTime)/60), "min)")
+
+i += 1
